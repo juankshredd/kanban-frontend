@@ -9,11 +9,17 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import Column from "@/components/kanban/Column";
+import Button from "@/components/ui/Button";
 import { Task } from "@/types/task";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>([]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    router.push("/login");
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -58,9 +64,17 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-200 p-8">
 
-      <h1 className="text-3xl font-bold mb-6">
-        Kanban Dashboard
-      </h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">
+          Kanban Dashboard
+        </h1>
+        <Button
+          onClick={handleLogout}
+          className="bg-red-500 text-white hover:bg-red-600"
+        >
+          Log Out
+        </Button>
+      </div>
 
       <DndContext onDragEnd={handleDragEnd}>
         <div className="kanban-board">

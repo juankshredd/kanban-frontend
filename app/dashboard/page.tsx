@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import Column from "@/components/kanban/Column";
 import Button from "@/components/ui/Button";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 import { Task } from "@/types/task";
 
 export default function DashboardPage() {
@@ -62,18 +63,21 @@ export default function DashboardPage() {
   const done = tasks.filter((t) => t.status === "DONE");
 
   return (
-    <div className="min-h-screen bg-gray-200 p-8">
+    <div className="min-h-screen bg-gray-200 dark:bg-slate-900 p-8 transition-colors">
 
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           Kanban Dashboard
         </h1>
-        <Button
-          onClick={handleLogout}
-          className="bg-red-500 text-white hover:bg-red-600"
-        >
-          Log Out
-        </Button>
+        <div className="flex items-center gap-4">
+          <ThemeToggle />
+          <Button
+            onClick={handleLogout}
+            className="bg-red-500 text-white hover:bg-red-600"
+          >
+            Log Out
+          </Button>
+        </div>
       </div>
 
       <DndContext onDragEnd={handleDragEnd}>

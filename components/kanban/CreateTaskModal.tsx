@@ -22,22 +22,22 @@ export default function CreateTaskModal({ status, close, refresh }: any) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
 
-      <div className="bg-white rounded-lg p-6 w-96">
+      <div className="bg-white dark:bg-slate-800 rounded-lg p-6 w-96">
 
-        <h2 className="text-xl font-bold mb-4">
+        <h2 className="text-xl font-bold mb-4 dark:text-white">
           Create Task
         </h2>
 
         <input
           placeholder="Title"
-          className="border w-full mb-3 p-2 rounded"
+          className="border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white w-full mb-3 p-2 rounded"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
 
         <textarea
           placeholder="Description"
-          className="border w-full mb-3 p-2 rounded"
+          className="border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white w-full mb-3 p-2 rounded"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
@@ -46,14 +46,14 @@ export default function CreateTaskModal({ status, close, refresh }: any) {
 
           <button
             onClick={close}
-            className="px-3 py-1 border rounded"
+            className="px-3 py-1 border border-gray-300 dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 rounded hover:bg-gray-100 transition"
           >
             Cancel
           </button>
 
           <button
             onClick={handleCreate}
-            className="px-3 py-1 bg-blue-600 text-white rounded"
+            className="px-3 py-1 bg-blue-600 dark:bg-blue-700 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition"
           >
             Create
           </button>

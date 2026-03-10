@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,23 +27,27 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors">
 
-      <div className="bg-white w-[420px] p-10 rounded-2xl shadow-2xl">
+      <div className="absolute top-6 right-6">
+        <ThemeToggle />
+      </div>
+
+      <div className="bg-white dark:bg-slate-800 w-[420px] p-10 rounded-2xl shadow-2xl">
 
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="text-3xl font-extrabold text-gray-800">
+          <div className="text-3xl font-extrabold text-gray-800 dark:text-white">
             Hack-Balí
           </div>
 
-          <div className="text-gray-500 text-sm">
+          <div className="text-gray-500 dark:text-gray-400 text-sm">
             Kanban App
           </div>
         </div>
 
         {/* Title */}
-        <h2 className="text-2xl font-bold text-center mb-6">
+        <h2 className="text-2xl font-bold text-center mb-6 dark:text-white">
           Sign in
         </h2>
 
@@ -52,7 +57,7 @@ export default function LoginPage() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
         {/* Password */}
@@ -61,7 +66,7 @@ export default function LoginPage() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-4 py-3 mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg px-4 py-3 mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
         {/* Button */}
@@ -73,13 +78,13 @@ export default function LoginPage() {
         </button>
 
         {/* Register */}
-        <div className="text-center mt-6 text-sm text-gray-500">
-          Don’t have an account?
+        <div className="text-center mt-6 text-sm text-gray-500 dark:text-gray-400">
+          Don't have an account?
         </div>
 
         <button
           onClick={() => router.push("/register")}
-          className="w-full mt-2 border border-gray-300 py-2 rounded-lg hover:bg-gray-100"
+          className="w-full mt-2 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 py-2 rounded-lg hover:bg-gray-100 transition"
         >
           Create account
         </button>

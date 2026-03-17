@@ -1,61 +1,73 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   DndContext,
   DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
 } from "@dnd-kit/core";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { api } from "@/lib/api";
 import Column from "@/components/kanban/Column";
-import Button from "@/components/ui/Button";
-import ThemeToggle from "@/components/ui/ThemeToggle";
+import TaskCard from "@/components/kanban/TaskCard";
 import { Task } from "@/types/task";
+import { api } from "@/lib/api";
 
-export default function DashboardPage() {
-  const router = useRouter();
+export default function Dashboard() {
+
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    router.push("/login");
+  const fetchTasks = async () => {
+    const data = await api("/tasks", "GET");
+    setTasks(data);
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
     fetchTasks();
   }, []);
-
-  const fetchTasks = async () => {
-    const data = await api("/tasks");
-    setTasks(data);
-  };
 
   const handleDeleteTask = async (id: string) => {
     await api(`/tasks/${id}`, "DELETE");
     fetchTasks();
   };
 
+  const handleDragStart = (event: DragStartEvent) => {
+    const task = tasks.find((t) => t.id === event.active.id);
+    if (task) setActiveTask(task);
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
+
     const { active, over } = event;
+
+    setActiveTask(null);
 
     if (!over) return;
 
-    const taskId = active.id;
+    const taskId = active.id as string;
     const newStatus = over.id as "TODO" | "IN_PROGRESS" | "DONE";
 
-    await api(`/tasks/${taskId}`, "PATCH", {
-      status: newStatus,
-    });
+    const task = tasks.find((t) => t.id === taskId);
 
-    fetchTasks();
+    if (!task || task.status === newStatus) return;
+
+    // Optimistic update: update UI immediately
+    setTasks((prevTasks) =>
+      prevTasks.map((t) =>
+        t.id === taskId ? { ...t, status: newStatus } : t
+      )
+    );
+
+    // API call in background
+    try {
+      await api(`/tasks/${taskId}`, "PATCH", {
+        status: newStatus,
+      });
+    } catch (error) {
+      // Revert on error
+      fetchTasks();
+    }
   };
 
   const todo = tasks.filter((t) => t.status === "TODO");
@@ -63,47 +75,53 @@ export default function DashboardPage() {
   const done = tasks.filter((t) => t.status === "DONE");
 
   return (
-    <div className="min-h-screen bg-gray-200 dark:bg-slate-900 p-8 transition-colors">
+    <div className="p-10">
 
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Kanban Dashboard
-        </h1>
-        <div className="flex items-center gap-4">
-          <ThemeToggle />
-          <Button
-            onClick={handleLogout}
-            className="bg-red-500 text-white hover:bg-red-600"
-          >
-            Log Out
-          </Button>
-        </div>
-      </div>
+      <h1 className="text-3xl font-bold mb-8">
+        Kanban Dashboard
+      </h1>
 
-      <DndContext onDragEnd={handleDragEnd}>
-        <div className="kanban-board">
+      <DndContext
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+
+        <div className="grid grid-cols-3 gap-6">
 
           <Column
-  title="TODO"
-  tasks={todo}
-  onDelete={handleDeleteTask}
-  refreshTasks={fetchTasks}
-/>
+            title="TODO"
+            tasks={todo}
+            onDelete={handleDeleteTask}
+            refreshTasks={fetchTasks}
+          />
 
-<Column
-  title="IN_PROGRESS"
-  tasks={inProgress}
-  onDelete={handleDeleteTask}
-  refreshTasks={fetchTasks}
-/>
+          <Column
+            title="IN_PROGRESS"
+            tasks={inProgress}
+            onDelete={handleDeleteTask}
+            refreshTasks={fetchTasks}
+          />
 
-<Column
-  title="DONE"
-  tasks={done}
-  onDelete={handleDeleteTask}
-  refreshTasks={fetchTasks}
-/>
+          <Column
+            title="DONE"
+            tasks={done}
+            onDelete={handleDeleteTask}
+            refreshTasks={fetchTasks}
+          />
+
         </div>
+
+        <DragOverlay>
+          {activeTask ? (
+            <div className="rotate-2 opacity-90">
+              <TaskCard
+                task={activeTask}
+                onDelete={() => {}}
+              />
+            </div>
+          ) : null}
+        </DragOverlay>
+
       </DndContext>
 
     </div>

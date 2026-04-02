@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,24 +28,28 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors">
-
-      <div className="absolute top-6 right-6">
+    <>
+      {/* Theme toggle — fuera del contenedor overflow-hidden para que fixed funcione bien */}
+      <div className="fixed top-5 right-8 z-50">
         <ThemeToggle />
       </div>
 
-      <div className="bg-white dark:bg-slate-800 w-[420px] p-10 rounded-2xl shadow-2xl">
+    <div className="relative min-h-screen flex items-end justify-center pb-16 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors overflow-hidden">
 
-        {/* Logo */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="text-3xl font-extrabold text-gray-800 dark:text-white">
-            Hack-Balí
-          </div>
+      {/* Logo de fondo */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none" aria-hidden="true">
+        <Image
+          src="/logo.png"
+          alt=""
+          width={520}
+          height={520}
+          className="opacity-25 dark:opacity-20 object-contain"
+          priority
+        />
+      </div>
 
-          <div className="text-gray-500 dark:text-gray-400 text-sm">
-            Kanban App
-          </div>
-        </div>
+      {/* Card */}
+      <div className="relative z-10 bg-white dark:bg-slate-800 w-[420px] p-10 rounded-2xl shadow-2xl">
 
         {/* Title */}
         <h2 className="text-2xl font-bold text-center mb-6 dark:text-white">
@@ -92,5 +97,6 @@ export default function LoginPage() {
       </div>
 
     </div>
+    </>
   );
 }

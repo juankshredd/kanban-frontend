@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import ThemeToggle from "@/components/ui/ThemeToggle";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -28,13 +27,9 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-slate-900 transition-colors">
-      <div className="absolute top-6 right-6">
-        <ThemeToggle />
-      </div>
-
-      <div className="bg-white dark:bg-slate-800 p-8 rounded-xl shadow w-96">
-        <h1 className="text-2xl font-bold mb-6 text-center dark:text-white">
+    <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4">
+      <div className="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-2xl p-8">
+        <h1 className="text-2xl font-bold text-center text-white mb-6">
           Create Account
         </h1>
 
@@ -43,35 +38,38 @@ export default function RegisterPage() {
             type="text"
             placeholder="Username"
             required
+            value={form.username}
             onChange={(e) =>
               setForm({ ...form, username: e.target.value })
             }
-            className="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white p-2 rounded"
+            className="w-full bg-slate-900 border border-slate-700 text-white placeholder-slate-500 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           />
 
           <input
             type="email"
             placeholder="Email"
             required
+            value={form.email}
             onChange={(e) =>
               setForm({ ...form, email: e.target.value })
             }
-            className="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white p-2 rounded"
+            className="w-full bg-slate-900 border border-slate-700 text-white placeholder-slate-500 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           />
 
           <input
             type="password"
             placeholder="Password"
             required
+            value={form.password}
             onChange={(e) =>
               setForm({ ...form, password: e.target.value })
             }
-            className="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white p-2 rounded"
+            className="w-full bg-slate-900 border border-slate-700 text-white placeholder-slate-500 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           />
 
           <button
             type="submit"
-            className="w-full bg-green-600 text-white py-2 rounded"
+            className="w-full border-2 border-indigo-500 text-indigo-400 font-semibold py-3 rounded-lg hover:bg-indigo-500/10 transition"
           >
             Register
           </button>
@@ -80,7 +78,7 @@ export default function RegisterPage() {
         <div className="mt-4 text-center">
           <button
             onClick={() => router.push("/login")}
-            className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
+            className="text-indigo-400 text-sm underline hover:text-indigo-300 transition"
           >
             Back to Login
           </button>

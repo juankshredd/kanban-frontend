@@ -36,29 +36,28 @@ export default function TaskCard({ task, onDelete }: Props) {
       id={task.id}
       ref={setNodeRef}
       style={style}
-      className="task-card"
+      className="bg-slate-800 rounded-lg p-4 mb-3 shadow-md"
     >
 
-      {/* drag handle */}
       <div
         {...attributes}
         {...listeners}
-        className="cursor-grab active:cursor-grabbing mb-2"
+        className="cursor-grab active:cursor-grabbing mb-1"
       >
-        <h3 className="task-title">
+        <h3 className="text-white font-semibold">
           {task.title}
         </h3>
       </div>
 
-      <p className="task-desc">
+      <p className="text-sm text-slate-400 mb-2">
         {task.description}
       </p>
 
       {task.status === "TODO" && (
-        <div className="task-actions">
+        <div className="flex gap-2">
           <button
             onClick={handleDelete}
-            className="text-red-500 dark:text-red-400 text-sm hover:text-red-700 dark:hover:text-red-300 transition"
+            className="text-red-400 text-sm hover:text-red-300 transition"
           >
             Delete
           </button>

@@ -23,15 +23,14 @@ export default function Column({ title, tasks, onDelete, refreshTasks }: Props) 
   const [open, setOpen] = useState(false);
 
   return (
-    <div ref={setNodeRef} className="kanban-column">
+    <div ref={setNodeRef} className="bg-slate-900 border border-slate-800 rounded-xl p-4 min-h-[500px]">
 
-      <div className="flex justify-between items-center mb-3">
-        <h2 className="column-title dark:text-white">{title}</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-white font-bold text-sm tracking-wide">{title}</h2>
 
-        {/* botón crear */}
         <button
           onClick={() => setOpen(true)}
-          className="text-sm bg-blue-600 dark:bg-blue-700 text-white px-2 py-1 rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition"
+          className="text-sm bg-blue-500 hover:bg-blue-600 text-white font-semibold px-3 py-1.5 rounded-lg transition"
         >
           + New
         </button>

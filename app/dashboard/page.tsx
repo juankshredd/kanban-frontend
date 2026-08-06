@@ -75,7 +75,7 @@ export default function Dashboard() {
   const done = tasks.filter((t) => t.status === "DONE");
 
   return (
-    <div className="p-10">
+    <div className="min-h-screen bg-slate-950 text-white p-10">
 
       <h1 className="text-3xl font-bold mb-8">
         Kanban Dashboard

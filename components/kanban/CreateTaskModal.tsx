@@ -20,24 +20,24 @@ export default function CreateTaskModal({ status, close, refresh }: any) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
 
-      <div className="bg-white dark:bg-slate-800 rounded-lg p-6 w-96">
+      <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 w-96">
 
-        <h2 className="text-xl font-bold mb-4 dark:text-white">
+        <h2 className="text-xl font-bold mb-4 text-white">
           Create Task
         </h2>
 
         <input
           placeholder="Title"
-          className="border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white w-full mb-3 p-2 rounded"
+          className="bg-slate-950 border border-slate-700 text-white placeholder-slate-500 w-full mb-3 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
 
         <textarea
           placeholder="Description"
-          className="border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white w-full mb-3 p-2 rounded"
+          className="bg-slate-950 border border-slate-700 text-white placeholder-slate-500 w-full mb-3 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
@@ -46,14 +46,14 @@ export default function CreateTaskModal({ status, close, refresh }: any) {
 
           <button
             onClick={close}
-            className="px-3 py-1 border border-gray-300 dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 rounded hover:bg-gray-100 transition"
+            className="px-3 py-1.5 border border-slate-700 text-slate-300 rounded-lg hover:bg-slate-800 transition"
           >
             Cancel
           </button>
 
           <button
             onClick={handleCreate}
-            className="px-3 py-1 bg-blue-600 dark:bg-blue-700 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition"
+            className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition"
           >
             Create
           </button>

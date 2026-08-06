@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* RESET GENERAL */
 
@@ -65,49 +63,6 @@ body {
   align-items: flex-start;
 }
 
-/* COLUMNAS */
-
-.kanban-column {
-  flex: 1;
-  background: #e2e8f0;
-  border-radius: 12px;
-  padding: 16px;
-  min-height: 500px;
-}
-
-/* HEADER COLUMNA */
-
-.column-title {
-  font-weight: 700;
-  margin-bottom: 12px;
-  font-size: 18px;
-}
-
-/* TASK CARD */
-
-.task-card {
-  background: white;
-  border-radius: 10px;
-  padding: 14px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-}
-
-.task-title {
-  font-weight: 600;
-}
-
-.task-desc {
-  font-size: 14px;
-  color: #64748b;
-  margin-bottom: 10px;
-}
-
-.task-actions {
-  display: flex;
-  gap: 6px;
-}
-
 /* ===== DARK MODE ===== */
 
 html.dark body {
@@ -117,24 +72,6 @@ html.dark body {
 
 html.dark .page-container {
   background-color: #0f172a;
-}
-
-html.dark .kanban-column {
-  background: #1e293b;
-}
-
-html.dark .task-card {
-  background: #334155;
-  color: #f1f5f9;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-}
-
-html.dark .task-desc {
-  color: #cbd5e1;
-}
-
-html.dark .task-actions {
-  /* Ensure buttons in task actions have proper contrast */
 }
 
 html.dark input {

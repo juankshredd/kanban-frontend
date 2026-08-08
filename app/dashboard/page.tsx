@@ -10,7 +10,7 @@ import {
 
 import Column from "@/components/kanban/Column";
 import TaskCard from "@/components/kanban/TaskCard";
-import { Task } from "@/types/task";
+import { Task, TaskType } from "@/types/task";
 import { api } from "@/lib/api";
 
 export default function Dashboard() {
@@ -30,6 +30,21 @@ export default function Dashboard() {
   const handleDeleteTask = async (id: string) => {
     await api(`/tasks/${id}`, "DELETE");
     fetchTasks();
+  };
+
+  const handleTypeChange = async (id: string, type: TaskType) => {
+    // Optimistic update: update UI immediately
+    setTasks((prevTasks) =>
+      prevTasks.map((t) => (t.id === id ? { ...t, type } : t))
+    );
+
+    // API call in background
+    try {
+      await api(`/tasks/${id}/type`, "PATCH", { type });
+    } catch (error) {
+      // Revert on error
+      fetchTasks();
+    }
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -75,7 +90,7 @@ export default function Dashboard() {
   const done = tasks.filter((t) => t.status === "DONE");
 
   return (
-    <div className="p-10">
+    <div className="min-h-screen bg-slate-950 text-white p-10">
 
       <h1 className="text-3xl font-bold mb-8">
         Kanban Dashboard
@@ -92,6 +107,7 @@ export default function Dashboard() {
             title="TODO"
             tasks={todo}
             onDelete={handleDeleteTask}
+            onTypeChange={handleTypeChange}
             refreshTasks={fetchTasks}
           />
 
@@ -99,6 +115,7 @@ export default function Dashboard() {
             title="IN_PROGRESS"
             tasks={inProgress}
             onDelete={handleDeleteTask}
+            onTypeChange={handleTypeChange}
             refreshTasks={fetchTasks}
           />
 
@@ -106,6 +123,7 @@ export default function Dashboard() {
             title="DONE"
             tasks={done}
             onDelete={handleDeleteTask}
+            onTypeChange={handleTypeChange}
             refreshTasks={fetchTasks}
           />
 
@@ -117,6 +135,7 @@ export default function Dashboard() {
               <TaskCard
                 task={activeTask}
                 onDelete={() => {}}
+                onTypeChange={() => {}}
               />
             </div>
           ) : null}

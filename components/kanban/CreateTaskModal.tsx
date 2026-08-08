@@ -2,17 +2,27 @@
 
 import { useState } from "react";
 import { api } from "@/lib/api";
+import { TaskStatus, TaskType } from "@/types/task";
+import { TASK_TYPES, TASK_TYPE_CONFIG } from "@/lib/taskType";
 
-export default function CreateTaskModal({ status, close, refresh }: any) {
+interface Props {
+  status: TaskStatus;
+  close: () => void;
+  refresh: () => void;
+}
+
+export default function CreateTaskModal({ status, close, refresh }: Props) {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [type, setType] = useState<TaskType>("STORY");
 
   const handleCreate = async () => {
     await api("/tasks", "POST", {
       title,
       description,
       status,
+      type,
     });
 
     refresh();
@@ -41,6 +51,22 @@ export default function CreateTaskModal({ status, close, refresh }: any) {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
+
+        <label className="block text-xs font-semibold text-slate-400 mb-1">
+          Type
+        </label>
+
+        <select
+          value={type}
+          onChange={(e) => setType(e.target.value as TaskType)}
+          className="bg-slate-950 border border-slate-700 text-white w-full mb-3 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          {TASK_TYPES.map((t) => (
+            <option key={t} value={t}>
+              {TASK_TYPE_CONFIG[t].label}
+            </option>
+          ))}
+        </select>
 
         <div className="flex justify-end gap-2">
 

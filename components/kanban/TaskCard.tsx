@@ -1,15 +1,17 @@
 "use client";
 
-import { Task } from "@/types/task";
+import { Task, TaskType } from "@/types/task";
+import { TASK_TYPES, TASK_TYPE_CONFIG } from "@/lib/taskType";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 interface Props {
   task: Task;
   onDelete: (id: string) => void;
+  onTypeChange: (id: string, type: TaskType) => void;
 }
 
-export default function TaskCard({ task, onDelete }: Props) {
+export default function TaskCard({ task, onDelete, onTypeChange }: Props) {
 
   const {
     attributes,
@@ -31,6 +33,12 @@ export default function TaskCard({ task, onDelete }: Props) {
     onDelete(task.id);
   };
 
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onTypeChange(task.id, e.target.value as TaskType);
+  };
+
+  const typeConfig = TASK_TYPE_CONFIG[task.type];
+
   return (
     <div
       id={task.id}
@@ -38,6 +46,22 @@ export default function TaskCard({ task, onDelete }: Props) {
       style={style}
       className="bg-slate-800 rounded-lg p-4 mb-3 shadow-md"
     >
+
+      <div className="mb-2">
+        <select
+          value={task.type}
+          onChange={handleTypeChange}
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          className={`text-xs font-semibold px-2 py-0.5 rounded-full border cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 ${typeConfig.badgeClass}`}
+        >
+          {TASK_TYPES.map((t) => (
+            <option key={t} value={t} className="bg-slate-800 text-white">
+              {TASK_TYPE_CONFIG[t].label}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <div
         {...attributes}

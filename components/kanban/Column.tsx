@@ -1,6 +1,6 @@
 "use client";
 
-import { Task } from "@/types/task";
+import { Task, TaskType } from "@/types/task";
 import TaskCard from "./TaskCard";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
@@ -11,10 +11,11 @@ interface Props {
   title: "TODO" | "IN_PROGRESS" | "DONE";
   tasks: Task[];
   onDelete: (id: string) => void;
+  onTypeChange: (id: string, type: TaskType) => void;
   refreshTasks: () => void;
 }
 
-export default function Column({ title, tasks, onDelete, refreshTasks }: Props) {
+export default function Column({ title, tasks, onDelete, onTypeChange, refreshTasks }: Props) {
 
   const { setNodeRef } = useDroppable({
     id: title,
@@ -45,6 +46,7 @@ export default function Column({ title, tasks, onDelete, refreshTasks }: Props) 
             key={task.id}
             task={task}
             onDelete={onDelete}
+            onTypeChange={onTypeChange}
           />
         ))}
       </SortableContext>

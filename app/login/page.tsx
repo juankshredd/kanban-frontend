@@ -22,7 +22,7 @@ export default function LoginPage() {
 
       const activeProjectId = localStorage.getItem("activeProjectId");
       router.push(activeProjectId ? `/projects/${activeProjectId}/board` : "/projects");
-    } catch (err) {
+    } catch {
       alert("Invalid credentials");
     }
   };

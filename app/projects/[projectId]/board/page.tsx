@@ -54,7 +54,7 @@ export default function BoardPage() {
     // API call in background
     try {
       await api(`/projects/${projectId}/tasks/${id}`, "PATCH", { type });
-    } catch (error) {
+    } catch {
       // Revert on error
       fetchTasks();
     }
@@ -92,7 +92,7 @@ export default function BoardPage() {
       await api(`/projects/${projectId}/tasks/${taskId}`, "PATCH", {
         status: newStatus,
       });
-    } catch (error) {
+    } catch {
       // Revert on error
       fetchTasks();
     }

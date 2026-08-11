@@ -3,8 +3,17 @@ export type TaskType = "EPIC" | "STORY" | "TASK" | "BUG";
 
 export interface Task {
   id: string;
+  ticket_id: string;
+  ticket_number: number;
   title: string;
   description: string;
   status: TaskStatus;
   type: TaskType;
+  project_id: string;
+  project_key?: string;
+  project_name?: string;
+  user_id: string;
+  user_name?: string;
+  created_at: string;
+  updated_at: string;
 }

@@ -21,7 +21,7 @@ export default function RegisterPage() {
 
       alert("User created successfully");
       router.push("/login");
-    } catch (error) {
+    } catch {
       alert("Registration failed");
     }
   };

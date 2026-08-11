@@ -47,7 +47,11 @@ export default function TaskCard({ task, onDelete, onTypeChange }: Props) {
       className="bg-slate-800 rounded-lg p-4 mb-3 shadow-md"
     >
 
-      <div className="mb-2">
+      <div className="flex items-center justify-between mb-2">
+        <span className="font-mono text-xs font-bold text-slate-400 tracking-wide">
+          {task.ticket_id}
+        </span>
+
         <select
           value={task.type}
           onChange={handleTypeChange}

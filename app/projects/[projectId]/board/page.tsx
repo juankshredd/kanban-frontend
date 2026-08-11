@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   DndContext,
   DragEndEvent,
@@ -12,21 +12,13 @@ import {
 import Column from "@/components/kanban/Column";
 import TaskCard from "@/components/kanban/TaskCard";
 import { Task, TaskType } from "@/types/task";
-import { ProjectDetail } from "@/types/project";
 import { api } from "@/lib/api";
 
 export default function BoardPage() {
   const { projectId } = useParams<{ projectId: string }>();
-  const router = useRouter();
 
-  const [project, setProject] = useState<ProjectDetail | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
-
-  const fetchProject = async () => {
-    const data = await api(`/projects/${projectId}`, "GET");
-    setProject(data);
-  };
 
   const fetchTasks = async () => {
     const data = await api(`/projects/${projectId}/tasks`, "GET");
@@ -35,7 +27,6 @@ export default function BoardPage() {
 
   useEffect(() => {
     localStorage.setItem("activeProjectId", projectId);
-    fetchProject();
     fetchTasks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
@@ -103,35 +94,9 @@ export default function BoardPage() {
   const done = tasks.filter((t) => t.status === "DONE");
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-10">
+    <div className="p-10">
 
-      <div className="flex justify-between items-start mb-8">
-        <div>
-          <button
-            onClick={() => router.push("/projects")}
-            className="text-slate-400 hover:text-slate-200 text-sm mb-2 transition"
-          >
-            ← Projects
-          </button>
-          <h1 className="text-3xl font-bold">
-            {project ? (
-              <>
-                <span className="text-blue-400 font-mono mr-2">{project.key}</span>
-                {project.name}
-              </>
-            ) : (
-              "Loading..."
-            )}
-          </h1>
-        </div>
-
-        <button
-          onClick={() => router.push(`/projects/${projectId}/members`)}
-          className="border border-slate-700 text-slate-300 hover:bg-slate-800 font-semibold px-4 py-2 rounded-lg transition"
-        >
-          Members
-        </button>
-      </div>
+      <h1 className="text-2xl font-bold mb-8">Board</h1>
 
       <DndContext
         onDragStart={handleDragStart}

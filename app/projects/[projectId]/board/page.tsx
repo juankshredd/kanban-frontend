@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import {
   DndContext,
   DragEndEvent,
@@ -11,24 +12,36 @@ import {
 import Column from "@/components/kanban/Column";
 import TaskCard from "@/components/kanban/TaskCard";
 import { Task, TaskType } from "@/types/task";
+import { ProjectDetail } from "@/types/project";
 import { api } from "@/lib/api";
 
-export default function Dashboard() {
+export default function BoardPage() {
+  const { projectId } = useParams<{ projectId: string }>();
+  const router = useRouter();
 
+  const [project, setProject] = useState<ProjectDetail | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
 
+  const fetchProject = async () => {
+    const data = await api(`/projects/${projectId}`, "GET");
+    setProject(data);
+  };
+
   const fetchTasks = async () => {
-    const data = await api("/tasks", "GET");
+    const data = await api(`/projects/${projectId}/tasks`, "GET");
     setTasks(data);
   };
 
   useEffect(() => {
+    localStorage.setItem("activeProjectId", projectId);
+    fetchProject();
     fetchTasks();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
 
   const handleDeleteTask = async (id: string) => {
-    await api(`/tasks/${id}`, "DELETE");
+    await api(`/projects/${projectId}/tasks/${id}`, "DELETE");
     fetchTasks();
   };
 
@@ -40,7 +53,7 @@ export default function Dashboard() {
 
     // API call in background
     try {
-      await api(`/tasks/${id}/type`, "PATCH", { type });
+      await api(`/projects/${projectId}/tasks/${id}`, "PATCH", { type });
     } catch (error) {
       // Revert on error
       fetchTasks();
@@ -76,7 +89,7 @@ export default function Dashboard() {
 
     // API call in background
     try {
-      await api(`/tasks/${taskId}`, "PATCH", {
+      await api(`/projects/${projectId}/tasks/${taskId}`, "PATCH", {
         status: newStatus,
       });
     } catch (error) {
@@ -92,9 +105,33 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-slate-950 text-white p-10">
 
-      <h1 className="text-3xl font-bold mb-8">
-        Kanban Dashboard
-      </h1>
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <button
+            onClick={() => router.push("/projects")}
+            className="text-slate-400 hover:text-slate-200 text-sm mb-2 transition"
+          >
+            ← Projects
+          </button>
+          <h1 className="text-3xl font-bold">
+            {project ? (
+              <>
+                <span className="text-blue-400 font-mono mr-2">{project.key}</span>
+                {project.name}
+              </>
+            ) : (
+              "Loading..."
+            )}
+          </h1>
+        </div>
+
+        <button
+          onClick={() => router.push(`/projects/${projectId}/members`)}
+          className="border border-slate-700 text-slate-300 hover:bg-slate-800 font-semibold px-4 py-2 rounded-lg transition"
+        >
+          Members
+        </button>
+      </div>
 
       <DndContext
         onDragStart={handleDragStart}
@@ -106,6 +143,7 @@ export default function Dashboard() {
           <Column
             title="TODO"
             tasks={todo}
+            projectId={projectId}
             onDelete={handleDeleteTask}
             onTypeChange={handleTypeChange}
             refreshTasks={fetchTasks}
@@ -114,6 +152,7 @@ export default function Dashboard() {
           <Column
             title="IN_PROGRESS"
             tasks={inProgress}
+            projectId={projectId}
             onDelete={handleDeleteTask}
             onTypeChange={handleTypeChange}
             refreshTasks={fetchTasks}
@@ -122,6 +161,7 @@ export default function Dashboard() {
           <Column
             title="DONE"
             tasks={done}
+            projectId={projectId}
             onDelete={handleDeleteTask}
             onTypeChange={handleTypeChange}
             refreshTasks={fetchTasks}

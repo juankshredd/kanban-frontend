@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { useParams } from "next/navigation";
 import { api } from "@/lib/api";
-import { ProjectDetail, ProjectRole } from "@/types/project";
+import { ProjectRole } from "@/types/project";
+import { useProject } from "@/context/ProjectProvider";
 
 export default function MembersPage() {
   const { projectId } = useParams<{ projectId: string }>();
-  const router = useRouter();
-
-  const [project, setProject] = useState<ProjectDetail | null>(null);
+  const { project, refreshProject } = useProject();
 
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<ProjectRole>("MEMBER");
@@ -18,16 +17,6 @@ export default function MembersPage() {
 
   const [actioningUserId, setActioningUserId] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
-
-  const fetchProject = async () => {
-    const data = await api(`/projects/${projectId}`, "GET");
-    setProject(data);
-  };
-
-  useEffect(() => {
-    fetchProject();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId]);
 
   const isOwner = project?.role === "OWNER";
 
@@ -48,7 +37,7 @@ export default function MembersPage() {
 
       setInviteEmail("");
       setInviteRole("MEMBER");
-      fetchProject();
+      refreshProject();
     } catch (err) {
       setInviteError(err instanceof Error ? err.message : "No se pudo invitar al usuario");
     } finally {
@@ -62,7 +51,7 @@ export default function MembersPage() {
 
     try {
       await api(`/projects/${projectId}/members/${userId}`, "PATCH", { role });
-      fetchProject();
+      refreshProject();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "No se pudo cambiar el rol");
     } finally {
@@ -76,7 +65,7 @@ export default function MembersPage() {
 
     try {
       await api(`/projects/${projectId}/members/${userId}`, "DELETE");
-      fetchProject();
+      refreshProject();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "No se pudo quitar al miembro");
     } finally {
@@ -85,26 +74,9 @@ export default function MembersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-10">
+    <div className="p-10">
 
-      <div className="mb-8">
-        <button
-          onClick={() => router.push(`/projects/${projectId}/board`)}
-          className="text-slate-400 hover:text-slate-200 text-sm mb-2 transition"
-        >
-          ← Board
-        </button>
-        <h1 className="text-3xl font-bold">
-          {project ? (
-            <>
-              <span className="text-blue-400 font-mono mr-2">{project.key}</span>
-              Members
-            </>
-          ) : (
-            "Loading..."
-          )}
-        </h1>
-      </div>
+      <h1 className="text-2xl font-bold mb-8">Members</h1>
 
       {project && (
         <div className="max-w-2xl">

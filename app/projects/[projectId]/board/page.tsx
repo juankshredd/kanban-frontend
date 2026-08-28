@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import {
   DndContext,
   DragEndEvent,
@@ -13,22 +14,25 @@ import TaskCard from "@/components/kanban/TaskCard";
 import { Task, TaskType } from "@/types/task";
 import { api } from "@/lib/api";
 
-export default function Dashboard() {
+export default function BoardPage() {
+  const { projectId } = useParams<{ projectId: string }>();
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
 
   const fetchTasks = async () => {
-    const data = await api("/tasks", "GET");
+    const data = await api(`/projects/${projectId}/tasks`, "GET");
     setTasks(data);
   };
 
   useEffect(() => {
+    localStorage.setItem("activeProjectId", projectId);
     fetchTasks();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
 
   const handleDeleteTask = async (id: string) => {
-    await api(`/tasks/${id}`, "DELETE");
+    await api(`/projects/${projectId}/tasks/${id}`, "DELETE");
     fetchTasks();
   };
 
@@ -40,8 +44,8 @@ export default function Dashboard() {
 
     // API call in background
     try {
-      await api(`/tasks/${id}/type`, "PATCH", { type });
-    } catch (error) {
+      await api(`/projects/${projectId}/tasks/${id}`, "PATCH", { type });
+    } catch {
       // Revert on error
       fetchTasks();
     }
@@ -76,10 +80,10 @@ export default function Dashboard() {
 
     // API call in background
     try {
-      await api(`/tasks/${taskId}`, "PATCH", {
+      await api(`/projects/${projectId}/tasks/${taskId}`, "PATCH", {
         status: newStatus,
       });
-    } catch (error) {
+    } catch {
       // Revert on error
       fetchTasks();
     }
@@ -90,11 +94,9 @@ export default function Dashboard() {
   const done = tasks.filter((t) => t.status === "DONE");
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-10">
+    <div className="p-10">
 
-      <h1 className="text-3xl font-bold mb-8">
-        Kanban Dashboard
-      </h1>
+      <h1 className="text-2xl font-bold mb-8">Board</h1>
 
       <DndContext
         onDragStart={handleDragStart}
@@ -106,6 +108,7 @@ export default function Dashboard() {
           <Column
             title="TODO"
             tasks={todo}
+            projectId={projectId}
             onDelete={handleDeleteTask}
             onTypeChange={handleTypeChange}
             refreshTasks={fetchTasks}
@@ -114,6 +117,7 @@ export default function Dashboard() {
           <Column
             title="IN_PROGRESS"
             tasks={inProgress}
+            projectId={projectId}
             onDelete={handleDeleteTask}
             onTypeChange={handleTypeChange}
             refreshTasks={fetchTasks}
@@ -122,6 +126,7 @@ export default function Dashboard() {
           <Column
             title="DONE"
             tasks={done}
+            projectId={projectId}
             onDelete={handleDeleteTask}
             onTypeChange={handleTypeChange}
             refreshTasks={fetchTasks}

@@ -1,15 +1,23 @@
 "use client";
 
 import { useTheme } from "@/context/ThemeProvider";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
+
+function subscribeNoop() {
+  return () => {};
+}
 
 export default function ThemeToggle() {
   const { isDark, toggleDarkMode } = useTheme();
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Client-only mount flag via useSyncExternalStore instead of a
+  // useEffect+setState pair, so the first client render after hydration
+  // reads true without triggering a render-phase setState.
+  const mounted = useSyncExternalStore(
+    subscribeNoop,
+    () => true,
+    () => false
+  );
 
   // Prevent hydration mismatch by not rendering until mounted
   if (!mounted) {

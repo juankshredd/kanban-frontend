@@ -20,8 +20,9 @@ export default function LoginPage() {
 
       localStorage.setItem("token", res.token);
 
-      router.push("/dashboard");
-    } catch (err) {
+      const activeProjectId = localStorage.getItem("activeProjectId");
+      router.push(activeProjectId ? `/projects/${activeProjectId}/board` : "/projects");
+    } catch {
       alert("Invalid credentials");
     }
   };

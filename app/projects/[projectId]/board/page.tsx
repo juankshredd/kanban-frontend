@@ -124,6 +124,7 @@ export default function BoardPage() {
           <Column
             title="TODO"
             tasks={todo}
+            allTasks={tasks}
             projectId={projectId}
             onDelete={handleDeleteTask}
             onTypeChange={handleTypeChange}
@@ -133,6 +134,7 @@ export default function BoardPage() {
           <Column
             title="IN_PROGRESS"
             tasks={inProgress}
+            allTasks={tasks}
             projectId={projectId}
             onDelete={handleDeleteTask}
             onTypeChange={handleTypeChange}
@@ -142,6 +144,7 @@ export default function BoardPage() {
           <Column
             title="DONE"
             tasks={done}
+            allTasks={tasks}
             projectId={projectId}
             onDelete={handleDeleteTask}
             onTypeChange={handleTypeChange}
@@ -156,6 +159,7 @@ export default function BoardPage() {
               <TaskCard
                 task={activeTask}
                 projectId={projectId}
+                tasks={[]}
                 onDelete={() => {}}
                 onTypeChange={() => {}}
                 refresh={() => {}}

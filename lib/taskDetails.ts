@@ -9,6 +9,7 @@ export interface TaskDetailField {
 // keep both in sync when a field or type is added.
 export const TASK_DETAIL_FIELDS: Record<TaskType, TaskDetailField[]> = {
   EPIC: [],
+  FEATURE: [],
   STORY: [{ key: "acceptance_criteria", label: "Acceptance Criteria" }],
   TASK: [],
   BUG: [

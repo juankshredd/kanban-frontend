@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import { Project } from "@/types/project";
 import { Company } from "@/types/company";
 import ProjectCard from "@/components/projects/ProjectCard";
@@ -14,16 +14,37 @@ export default function ProjectsPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [companyFilter, setCompanyFilter] = useState("");
   const [autoNavigateDone, setAutoNavigateDone] = useState(false);
+  const [error, setError] = useState("");
+  const [authError, setAuthError] = useState<401 | 403 | null>(null);
 
   const fetchProjects = async (companyId: string) => {
-    const query = companyId ? `?company_id=${companyId}` : "";
-    const data = await api(`/projects${query}`, "GET");
-    setProjects(data);
+    try {
+      const query = companyId ? `?company_id=${companyId}` : "";
+      const data = await api(`/projects${query}`, "GET");
+      setProjects(data);
+      setError("");
+    } catch (err) {
+      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+        if (err.status === 401) localStorage.removeItem("token");
+        setAuthError(err.status);
+        return;
+      }
+      setError(err instanceof Error ? err.message : "No se pudieron cargar los proyectos");
+    }
   };
 
   const fetchCompanies = async () => {
-    const data = await api("/companies", "GET");
-    setCompanies(data);
+    try {
+      const data = await api("/companies", "GET");
+      setCompanies(data);
+    } catch (err) {
+      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+        if (err.status === 401) localStorage.removeItem("token");
+        setAuthError(err.status);
+        return;
+      }
+      setError(err instanceof Error ? err.message : "No se pudieron cargar las companies");
+    }
   };
 
   useEffect(() => {
@@ -53,6 +74,30 @@ export default function ProjectsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projects]);
 
+  if (authError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white px-6">
+        <div className="max-w-md w-full text-center bg-slate-900 border border-slate-800 rounded-2xl p-10">
+          <div className="text-5xl mb-4">{authError === 401 ? "🔒" : "🙅"}</div>
+          <h1 className="text-2xl font-bold mb-2">
+            {authError === 401 ? "Tu sesión expiró" : "No tenés acceso a esto"}
+          </h1>
+          <p className="text-slate-400 mb-6">
+            {authError === 401
+              ? "Por seguridad cerramos tu sesión. Volvé a iniciar sesión para seguir viendo tus proyectos."
+              : "Parece que no tenés permiso para ver este contenido. Si creés que es un error, hablá con quien administra la company."}
+          </p>
+          <button
+            onClick={() => router.push("/login")}
+            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-5 py-3 rounded-lg transition"
+          >
+            {authError === 401 ? "Iniciar sesión" : "Ir al login"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (projects === null || (!autoNavigateDone && companyFilter === "" && projects.length === 1)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
@@ -63,6 +108,12 @@ export default function ProjectsPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white p-10">
+
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-3 py-2 mb-4">
+          {error}
+        </div>
+      )}
 
       <div className="mb-8">
         <button

@@ -19,10 +19,16 @@ export default function BoardPage() {
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [error, setError] = useState("");
 
   const fetchTasks = async () => {
-    const data = await api(`/projects/${projectId}/tasks`, "GET");
-    setTasks(data);
+    try {
+      const data = await api(`/projects/${projectId}/tasks`, "GET");
+      setTasks(data);
+      setError("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo cargar el tablero");
+    }
   };
 
   useEffect(() => {
@@ -32,8 +38,12 @@ export default function BoardPage() {
   }, [projectId]);
 
   const handleDeleteTask = async (id: string) => {
-    await api(`/projects/${projectId}/tasks/${id}`, "DELETE");
-    fetchTasks();
+    try {
+      await api(`/projects/${projectId}/tasks/${id}`, "DELETE");
+      fetchTasks();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo borrar la tarea");
+    }
   };
 
   const handleTypeChange = async (id: string, type: TaskType) => {
@@ -98,6 +108,12 @@ export default function BoardPage() {
 
       <h1 className="text-2xl font-bold mb-8">Board</h1>
 
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-3 py-2 mb-4">
+          {error}
+        </div>
+      )}
+
       <DndContext
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
@@ -139,8 +155,10 @@ export default function BoardPage() {
             <div className="rotate-2 opacity-90">
               <TaskCard
                 task={activeTask}
+                projectId={projectId}
                 onDelete={() => {}}
                 onTypeChange={() => {}}
+                refresh={() => {}}
               />
             </div>
           ) : null}

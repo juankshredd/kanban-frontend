@@ -10,12 +10,13 @@ import TaskDetailsModal from "./TaskDetailsModal";
 interface Props {
   task: Task;
   projectId: string;
+  tasks: Task[];
   onDelete: (id: string) => void;
   onTypeChange: (id: string, type: TaskType) => void;
   refresh: () => void;
 }
 
-export default function TaskCard({ task, projectId, onDelete, onTypeChange, refresh }: Props) {
+export default function TaskCard({ task, projectId, tasks, onDelete, onTypeChange, refresh }: Props) {
 
   const [detailsOpen, setDetailsOpen] = useState(false);
 
@@ -114,6 +115,7 @@ export default function TaskCard({ task, projectId, onDelete, onTypeChange, refr
         <TaskDetailsModal
           task={task}
           projectId={projectId}
+          tasks={tasks}
           close={() => setDetailsOpen(false)}
           refresh={refresh}
         />

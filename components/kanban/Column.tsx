@@ -10,13 +10,14 @@ import CreateTaskModal from "./CreateTaskModal";
 interface Props {
   title: "TODO" | "IN_PROGRESS" | "DONE";
   tasks: Task[];
+  allTasks: Task[];
   projectId: string;
   onDelete: (id: string) => void;
   onTypeChange: (id: string, type: TaskType) => void;
   refreshTasks: () => void;
 }
 
-export default function Column({ title, tasks, projectId, onDelete, onTypeChange, refreshTasks }: Props) {
+export default function Column({ title, tasks, allTasks, projectId, onDelete, onTypeChange, refreshTasks }: Props) {
 
   const { setNodeRef } = useDroppable({
     id: title,
@@ -51,6 +52,7 @@ export default function Column({ title, tasks, projectId, onDelete, onTypeChange
             key={task.id}
             task={task}
             projectId={projectId}
+            tasks={allTasks}
             onDelete={onDelete}
             onTypeChange={onTypeChange}
             refresh={refreshTasks}
@@ -61,6 +63,7 @@ export default function Column({ title, tasks, projectId, onDelete, onTypeChange
       {canCreate && open && (
         <CreateTaskModal
           projectId={projectId}
+          tasks={allTasks}
           close={() => setOpen(false)}
           refresh={refreshTasks}
         />

@@ -3,22 +3,26 @@
 import { useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { Task } from "@/types/task";
-import { TASK_TYPE_CONFIG } from "@/lib/taskType";
+import { TASK_TYPE_CONFIG, TASK_PARENT_TYPE, getParentCandidates } from "@/lib/taskType";
 import { TASK_DETAIL_FIELDS } from "@/lib/taskDetails";
 
 interface Props {
   task: Task;
   projectId: string;
+  tasks: Task[];
   close: () => void;
   refresh: () => void;
 }
 
-export default function TaskDetailsModal({ task, projectId, close, refresh }: Props) {
+export default function TaskDetailsModal({ task, projectId, tasks, close, refresh }: Props) {
   const fields = TASK_DETAIL_FIELDS[task.type];
+  const requiredParentType = TASK_PARENT_TYPE[task.type];
+  const candidates = requiredParentType ? getParentCandidates(tasks, task.type) : [];
 
   const [values, setValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(fields.map((f) => [f.key, task.details?.[f.key] ?? ""]))
   );
+  const [parentId, setParentId] = useState(task.parent_id ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -27,7 +31,10 @@ export default function TaskDetailsModal({ task, projectId, close, refresh }: Pr
     setError("");
 
     try {
-      await api(`/projects/${projectId}/tasks/${task.id}`, "PATCH", { details: values });
+      await api(`/projects/${projectId}/tasks/${task.id}`, "PATCH", {
+        details: values,
+        ...(requiredParentType ? { parent_id: parentId || null } : {}),
+      });
       refresh();
       close();
     } catch (err) {
@@ -54,7 +61,7 @@ export default function TaskDetailsModal({ task, projectId, close, refresh }: Pr
           </div>
         )}
 
-        {fields.length === 0 ? (
+        {fields.length === 0 && !requiredParentType ? (
           <p className="text-slate-400 text-sm mb-4">
             Las tarjetas de tipo {TASK_TYPE_CONFIG[task.type].label} no tienen campos adicionales.
           </p>
@@ -76,6 +83,33 @@ export default function TaskDetailsModal({ task, projectId, close, refresh }: Pr
           ))
         )}
 
+        {requiredParentType && (
+          <div className="mb-3">
+            <label className="block text-xs font-semibold text-slate-400 mb-1">
+              Parent
+            </label>
+
+            {candidates.length === 0 ? (
+              <p className="text-sm text-slate-500">
+                No {TASK_TYPE_CONFIG[requiredParentType].label} tasks available yet — create one first.
+              </p>
+            ) : (
+              <select
+                value={parentId}
+                onChange={(e) => setParentId(e.target.value)}
+                className="bg-slate-950 border border-slate-700 text-white w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">No parent</option>
+                {candidates.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.ticket_id} — {c.title}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        )}
+
         <div className="flex justify-end gap-2 mt-4">
           <button
             onClick={close}
@@ -85,7 +119,7 @@ export default function TaskDetailsModal({ task, projectId, close, refresh }: Pr
             Cancel
           </button>
 
-          {fields.length > 0 && (
+          {(fields.length > 0 || requiredParentType) && (
             <button
               onClick={handleSave}
               disabled={saving}

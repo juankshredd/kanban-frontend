@@ -50,8 +50,10 @@ export default function Column({ title, tasks, projectId, onDelete, onTypeChange
           <TaskCard
             key={task.id}
             task={task}
+            projectId={projectId}
             onDelete={onDelete}
             onTypeChange={onTypeChange}
+            refresh={refreshTasks}
           />
         ))}
       </SortableContext>

@@ -155,8 +155,10 @@ export default function BoardPage() {
             <div className="rotate-2 opacity-90">
               <TaskCard
                 task={activeTask}
+                projectId={projectId}
                 onDelete={() => {}}
                 onTypeChange={() => {}}
+                refresh={() => {}}
               />
             </div>
           ) : null}

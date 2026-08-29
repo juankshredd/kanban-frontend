@@ -1,17 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import { Task, TaskType } from "@/types/task";
 import { TASK_TYPES, TASK_TYPE_CONFIG } from "@/lib/taskType";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import TaskDetailsModal from "./TaskDetailsModal";
 
 interface Props {
   task: Task;
+  projectId: string;
   onDelete: (id: string) => void;
   onTypeChange: (id: string, type: TaskType) => void;
+  refresh: () => void;
 }
 
-export default function TaskCard({ task, onDelete, onTypeChange }: Props) {
+export default function TaskCard({ task, projectId, onDelete, onTypeChange, refresh }: Props) {
+
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   const {
     attributes,
@@ -31,6 +37,11 @@ export default function TaskCard({ task, onDelete, onTypeChange }: Props) {
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     onDelete(task.id);
+  };
+
+  const handleOpenDetails = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDetailsOpen(true);
   };
 
   const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -81,15 +92,31 @@ export default function TaskCard({ task, onDelete, onTypeChange }: Props) {
         {task.description}
       </p>
 
-      {task.status === "TODO" && (
-        <div className="flex gap-2">
+      <div className="flex gap-2">
+        <button
+          onClick={handleOpenDetails}
+          className="text-blue-400 text-sm hover:text-blue-300 transition"
+        >
+          Details
+        </button>
+
+        {task.status === "TODO" && (
           <button
             onClick={handleDelete}
             className="text-red-400 text-sm hover:text-red-300 transition"
           >
             Delete
           </button>
-        </div>
+        )}
+      </div>
+
+      {detailsOpen && (
+        <TaskDetailsModal
+          task={task}
+          projectId={projectId}
+          close={() => setDetailsOpen(false)}
+          refresh={refresh}
+        />
       )}
 
     </div>

@@ -10,6 +10,7 @@ export interface Task {
   status: TaskStatus;
   type: TaskType;
   project_id: string;
+  details: Record<string, string | null>;
   project_key?: string;
   project_name?: string;
   user_id: string;

@@ -43,3 +43,8 @@ export function getParentCandidates(tasks: Task[], childType: TaskType): Task[] 
   if (!requiredType) return [];
   return tasks.filter((t) => t.type === requiredType);
 }
+
+// Inverse of TASK_PARENT_TYPE: which types are legally a child of parentType.
+export function getChildTypes(parentType: TaskType): TaskType[] {
+  return TASK_TYPES.filter((t) => TASK_PARENT_TYPE[t] === parentType);
+}

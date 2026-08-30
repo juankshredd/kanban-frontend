@@ -1,7 +1,8 @@
 "use client";
 
 import { Task, TaskType } from "@/types/task";
-import TaskCard from "./TaskCard";
+import TaskCardTree from "./TaskCardTree";
+import { buildTaskTree } from "@/lib/taskHierarchy";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 import { useState } from "react";
@@ -47,10 +48,11 @@ export default function Column({ title, tasks, allTasks, projectId, onDelete, on
         items={tasks.map((t) => t.id)}
         strategy={verticalListSortingStrategy}
       >
-        {tasks.map((task) => (
-          <TaskCard
-            key={task.id}
-            task={task}
+        {buildTaskTree(tasks).map((node) => (
+          <TaskCardTree
+            key={node.task.id}
+            node={node}
+            depth={0}
             projectId={projectId}
             tasks={allTasks}
             onDelete={onDelete}

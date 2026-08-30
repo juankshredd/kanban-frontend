@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { Task } from "@/types/task";
-import { TASK_TYPE_CONFIG, TASK_PARENT_TYPE, getParentCandidates, getChildTypes } from "@/lib/taskType";
+import { TASK_TYPE_CONFIG, TASK_PARENT_TYPE, getParentCandidates, getChildTypes, canGainParent } from "@/lib/taskType";
 import { TASK_DETAIL_FIELDS } from "@/lib/taskDetails";
 import CreateRelatedTaskModal from "./CreateRelatedTaskModal";
 
@@ -19,8 +19,7 @@ export default function TaskDetailsModal({ task, projectId, tasks, close, refres
   const fields = TASK_DETAIL_FIELDS[task.type];
   const requiredParentType = TASK_PARENT_TYPE[task.type];
   const candidates = requiredParentType ? getParentCandidates(tasks, task.type) : [];
-  const canAddRelatedCard =
-    getChildTypes(task.type).length > 0 || (Boolean(requiredParentType) && !task.parent_id);
+  const canAddRelatedCard = getChildTypes(task.type).length > 0 || canGainParent(task);
 
   const [values, setValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(fields.map((f) => [f.key, task.details?.[f.key] ?? ""]))
@@ -29,6 +28,16 @@ export default function TaskDetailsModal({ task, projectId, tasks, close, refres
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [addRelationOpen, setAddRelationOpen] = useState(false);
+
+  // Resync when the underlying task's parent_id changes from outside this
+  // modal — e.g. CreateRelatedTaskModal (opened from here) links a new
+  // parent and calls refresh(), which updates the `task` prop while this
+  // modal stays mounted. Without this, `parentId` state would stay at its
+  // stale initial value and a subsequent Save would silently overwrite the
+  // link that was just created.
+  useEffect(() => {
+    setParentId(task.parent_id ?? "");
+  }, [task.parent_id]);
 
   const handleSave = async () => {
     setSaving(true);

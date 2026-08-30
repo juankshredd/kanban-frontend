@@ -1,12 +1,15 @@
-import { describe, expect, it, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, expect, it, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import TaskDetailsModal from "./TaskDetailsModal";
 import { makeTask } from "@/lib/testFixtures";
+import { api } from "@/lib/api";
 
 vi.mock("@/lib/api", async () => {
   const actual = await vi.importActual<typeof import("@/lib/api")>("@/lib/api");
   return { ...actual, api: vi.fn() };
 });
+
+const mockedApi = vi.mocked(api);
 
 function renderDetails(task: ReturnType<typeof makeTask>, tasks: ReturnType<typeof makeTask>[] = []) {
   return render(
@@ -46,5 +49,44 @@ describe("TaskDetailsModal — related card trigger", () => {
 
     expect(screen.getByText("Child of this card")).toBeInTheDocument();
     expect(screen.getByText("Parent of this card")).toBeInTheDocument();
+  });
+});
+
+describe("TaskDetailsModal — parentId resync (regression)", () => {
+  beforeEach(() => {
+    mockedApi.mockReset();
+    mockedApi.mockResolvedValue({});
+  });
+
+  // Regression test for a bug found in code review: parentId state was only
+  // seeded once at mount, so if CreateRelatedTaskModal (opened from this
+  // same modal) linked a new parent and called refresh() while this modal
+  // stayed open, a subsequent Save would send the modal's own stale
+  // (pre-link) parentId and silently erase the link that was just created.
+  it("picks up a parent_id change on the task prop and sends it on Save, instead of the stale initial value", async () => {
+    const story = makeTask({ type: "STORY", parent_id: null });
+    const { rerender } = renderDetails(story);
+
+    // Simulate refresh() propagating an externally-created parent link
+    // while the modal stays mounted (no unmount/remount in between).
+    const relinkedStory = { ...story, parent_id: "new-parent-id" };
+    rerender(
+      <TaskDetailsModal
+        task={relinkedStory}
+        projectId="project-1"
+        tasks={[relinkedStory]}
+        close={vi.fn()}
+        refresh={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByText("Save"));
+
+    await waitFor(() => expect(mockedApi).toHaveBeenCalled());
+    expect(mockedApi).toHaveBeenCalledWith(
+      `/projects/project-1/tasks/${story.id}`,
+      "PATCH",
+      expect.objectContaining({ parent_id: "new-parent-id" })
+    );
   });
 });

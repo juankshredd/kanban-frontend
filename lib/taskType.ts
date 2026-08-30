@@ -48,3 +48,9 @@ export function getParentCandidates(tasks: Task[], childType: TaskType): Task[] 
 export function getChildTypes(parentType: TaskType): TaskType[] {
   return TASK_TYPES.filter((t) => TASK_PARENT_TYPE[t] === parentType);
 }
+
+// Whether a task is eligible to have a *new* parent link created for it:
+// its type must allow a parent at all, and it can't already have one.
+export function canGainParent(task: Task): boolean {
+  return Boolean(TASK_PARENT_TYPE[task.type]) && !task.parent_id;
+}

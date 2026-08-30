@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { Task, TaskType } from "@/types/task";
-import { TASK_TYPE_CONFIG, TASK_PARENT_TYPE, getChildTypes } from "@/lib/taskType";
+import { TASK_TYPE_CONFIG, TASK_PARENT_TYPE, getChildTypes, canGainParent } from "@/lib/taskType";
 
 type Relation = "CHILD" | "PARENT";
 
@@ -19,7 +19,7 @@ export default function CreateRelatedTaskModal({ sourceTask, projectId, close, r
   const parentType = TASK_PARENT_TYPE[sourceTask.type];
 
   const canAddChild = childTypes.length > 0;
-  const canAddParent = Boolean(parentType) && !sourceTask.parent_id;
+  const canAddParent = canGainParent(sourceTask);
 
   const [relation, setRelation] = useState<Relation | null>(null);
   const [title, setTitle] = useState("");
@@ -27,9 +27,17 @@ export default function CreateRelatedTaskModal({ sourceTask, projectId, close, r
   const [childType, setChildType] = useState<TaskType | "">(childTypes[0] ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  // Set once the PARENT flow's create-task POST succeeds, so a retry after a
+  // failed link PATCH only retries the link instead of creating a second,
+  // duplicate parent task.
+  const [pendingParentId, setPendingParentId] = useState<string | null>(null);
 
   const handleBack = () => {
     setRelation(null);
+    setTitle("");
+    setDescription("");
+    setChildType(childTypes[0] ?? "");
+    setPendingParentId(null);
     setError("");
   };
 
@@ -48,20 +56,29 @@ export default function CreateRelatedTaskModal({ sourceTask, projectId, close, r
           parent_id: sourceTask.id,
         });
       } else {
-        const created = await api(`/projects/${projectId}/tasks`, "POST", {
-          title,
-          description,
-          type: parentType,
-        });
+        let newParentId = pendingParentId;
 
-        try {
-          await api(`/projects/${projectId}/tasks/${sourceTask.id}`, "PATCH", {
-            parent_id: created.id,
+        if (!newParentId) {
+          const created = await api(`/projects/${projectId}/tasks`, "POST", {
+            title,
+            description,
+            type: parentType,
           });
-        } catch (linkErr) {
+
+          if (!created?.id) {
+            throw new Error("Unexpected response creating the parent task");
+          }
+
+          newParentId = created.id;
+          setPendingParentId(newParentId);
+          // Surface the new (still-unlinked) parent task immediately, in
+          // case the link PATCH below fails and the user doesn't retry.
           refresh();
-          throw linkErr;
         }
+
+        await api(`/projects/${projectId}/tasks/${sourceTask.id}`, "PATCH", {
+          parent_id: newParentId,
+        });
       }
 
       refresh();

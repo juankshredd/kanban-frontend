@@ -27,48 +27,11 @@ describe("CreateRelatedTaskModal", () => {
     mockedApi.mockReset();
   });
 
-  it("enables both relation options for an unparented STORY (happy path)", () => {
+  it("shows the fixed required parent type for the source task (happy path)", () => {
     const story = makeTask({ type: "STORY", parent_id: null });
     renderModal(story);
 
-    expect(screen.getByText("Child of this card")).toBeEnabled();
-    expect(screen.getByText("Parent of this card")).toBeEnabled();
-  });
-
-  it("disables 'Parent of this card' when the source task already has a parent", () => {
-    const story = makeTask({ type: "STORY", parent_id: "existing-parent" });
-    renderModal(story);
-
-    expect(screen.getByText("Parent of this card")).toBeDisabled();
-    expect(screen.getByText(/already has a parent/i)).toBeInTheDocument();
-  });
-
-  it("disables 'Child of this card' for a leaf type (TASK) that can't have children", () => {
-    const task = makeTask({ type: "TASK", parent_id: null });
-    renderModal(task);
-
-    expect(screen.getByText("Child of this card")).toBeDisabled();
-    expect(screen.getByText(/can.t have children/i)).toBeInTheDocument();
-  });
-
-  it("creates a child task with parent_id set to the source task, then refreshes and closes", async () => {
-    mockedApi.mockResolvedValueOnce({ id: "new-child-id" });
-    const story = makeTask({ type: "STORY", parent_id: null });
-    const { refresh, close } = renderModal(story);
-
-    fireEvent.click(screen.getByText("Child of this card"));
-    fireEvent.change(screen.getByPlaceholderText("Title"), { target: { value: "Do the thing" } });
-    fireEvent.click(screen.getByText("Create"));
-
-    await waitFor(() => expect(refresh).toHaveBeenCalled());
-
-    expect(mockedApi).toHaveBeenCalledTimes(1);
-    expect(mockedApi).toHaveBeenCalledWith(
-      "/projects/project-1/tasks",
-      "POST",
-      expect.objectContaining({ title: "Do the thing", parent_id: story.id })
-    );
-    expect(close).toHaveBeenCalled();
+    expect(screen.getByText("Feature")).toBeInTheDocument();
   });
 
   it("creates a parent task then links the source task to it via PATCH, then refreshes and closes", async () => {
@@ -77,7 +40,6 @@ describe("CreateRelatedTaskModal", () => {
     const story = makeTask({ type: "STORY", parent_id: null });
     const { refresh, close } = renderModal(story);
 
-    fireEvent.click(screen.getByText("Parent of this card"));
     fireEvent.change(screen.getByPlaceholderText("Title"), { target: { value: "Bigger feature" } });
     fireEvent.click(screen.getByText("Create"));
 
@@ -107,7 +69,6 @@ describe("CreateRelatedTaskModal", () => {
     const story = makeTask({ type: "STORY", parent_id: null });
     const { refresh, close } = renderModal(story);
 
-    fireEvent.click(screen.getByText("Parent of this card"));
     fireEvent.change(screen.getByPlaceholderText("Title"), { target: { value: "Bigger feature" } });
     fireEvent.click(screen.getByText("Create"));
 
@@ -132,47 +93,18 @@ describe("CreateRelatedTaskModal", () => {
     );
   });
 
-  // Regression test for a code-review finding: handleBack used to reset
-  // pendingParentId, so going Back after a partial failure and retrying
-  // re-ran the whole PARENT flow from scratch — creating a second, duplicate
-  // orphan parent task instead of resuming the pending link.
-  it("does not re-POST a duplicate parent task if the user goes Back after a failed link attempt", async () => {
-    mockedApi.mockResolvedValueOnce({ id: "new-parent-id" }); // POST succeeds
-    mockedApi.mockRejectedValueOnce(new Error("network blip")); // PATCH fails
+  // Negative: an unexpected/malformed API response (missing id) must not be
+  // silently used in the follow-up PATCH — it should surface as an error
+  // instead of PATCHing a body with parent_id: undefined.
+  it("surfaces an error and does not PATCH when the create response has no id", async () => {
+    mockedApi.mockResolvedValueOnce({});
     const story = makeTask({ type: "STORY", parent_id: null });
     renderModal(story);
 
-    fireEvent.click(screen.getByText("Parent of this card"));
     fireEvent.change(screen.getByPlaceholderText("Title"), { target: { value: "Bigger feature" } });
     fireEvent.click(screen.getByText("Create"));
+
     await screen.findByText(/no se pudo crear/i);
-    expect(mockedApi).toHaveBeenCalledTimes(2);
-
-    fireEvent.click(screen.getByText("Back"));
-    fireEvent.click(screen.getByText("Parent of this card"));
-    expect(screen.getByText(/already created on a previous attempt/i)).toBeInTheDocument();
-
-    mockedApi.mockResolvedValueOnce({}); // PATCH retry succeeds
-    fireEvent.click(screen.getByText("Create"));
-
-    await waitFor(() => expect(mockedApi).toHaveBeenCalledTimes(3));
-    expect(mockedApi).toHaveBeenNthCalledWith(
-      3,
-      `/projects/project-1/tasks/${story.id}`,
-      "PATCH",
-      { parent_id: "new-parent-id" }
-    );
-  });
-
-  it("clears title/description/type when going Back to the relation picker", () => {
-    const story = makeTask({ type: "STORY", parent_id: null });
-    renderModal(story);
-
-    fireEvent.click(screen.getByText("Child of this card"));
-    fireEvent.change(screen.getByPlaceholderText("Title"), { target: { value: "Leftover title" } });
-    fireEvent.click(screen.getByText("Back"));
-    fireEvent.click(screen.getByText("Parent of this card"));
-
-    expect(screen.getByPlaceholderText("Title")).toHaveValue("");
+    expect(mockedApi).toHaveBeenCalledTimes(1);
   });
 });

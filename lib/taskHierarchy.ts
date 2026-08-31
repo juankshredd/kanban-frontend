@@ -31,3 +31,9 @@ export function buildTaskTree(columnTasks: Task[]): TaskNode[] {
 
   return roots;
 }
+
+// All direct children of a task, regardless of column/status — unlike
+// buildTaskTree, this is not scoped to a single column's task list.
+export function getDirectChildren(tasks: Task[], parentId: string): Task[] {
+  return tasks.filter((t) => t.parent_id === parentId);
+}

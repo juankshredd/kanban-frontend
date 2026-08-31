@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildTaskTree } from "./taskHierarchy";
+import { buildTaskTree, getDirectChildren } from "./taskHierarchy";
 import { makeTask } from "./testFixtures";
 
 describe("buildTaskTree", () => {
@@ -101,5 +101,27 @@ describe("buildTaskTree", () => {
     // parent_id cycle to be created in the first place.
     const tree = buildTaskTree([a, b]);
     expect(tree).toEqual([]);
+  });
+});
+
+describe("getDirectChildren", () => {
+  it("returns every task whose parent_id matches, regardless of status (happy path)", () => {
+    const story = makeTask({ type: "STORY" });
+    const task = makeTask({ type: "TASK", status: "TODO", parent_id: story.id });
+    const bug = makeTask({ type: "BUG", status: "DONE", parent_id: story.id });
+    const unrelated = makeTask({ type: "TASK", parent_id: null });
+
+    const children = getDirectChildren([story, task, bug, unrelated], story.id);
+
+    expect(children.map((t) => t.id)).toEqual([task.id, bug.id]);
+  });
+
+  // Negative: a task with no children of its own returns an empty array,
+  // not undefined/null or a thrown error.
+  it("returns an empty array when the task has no children", () => {
+    const story = makeTask({ type: "STORY" });
+    const other = makeTask({ type: "STORY" });
+
+    expect(getDirectChildren([story, other], story.id)).toEqual([]);
   });
 });

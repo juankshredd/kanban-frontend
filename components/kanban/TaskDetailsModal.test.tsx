@@ -23,32 +23,79 @@ function renderDetails(task: ReturnType<typeof makeTask>, tasks: ReturnType<type
   );
 }
 
-describe("TaskDetailsModal — related card trigger", () => {
-  it("shows the '+ Add related card' trigger for a task that can have a child or a parent (happy path)", () => {
+describe("TaskDetailsModal", () => {
+  beforeEach(() => {
+    mockedApi.mockReset();
+    mockedApi.mockResolvedValue({});
+  });
+
+  it("shows '+ Add related card' for a task that can gain a parent, and 'Create subtask' for a type with legal children (happy path)", () => {
     const story = makeTask({ type: "STORY", parent_id: null });
     renderDetails(story);
 
     expect(screen.getByText("+ Add related card")).toBeInTheDocument();
+    expect(screen.getByText("Create subtask")).toBeInTheDocument();
   });
 
   // Negative: a leaf-type task (TASK) that already has a parent can neither
-  // have children nor gain another parent — the trigger has nothing useful
-  // to do, so it must not render at all.
-  it("hides the trigger for a leaf-type task that already has a parent", () => {
+  // gain a new parent nor have children — neither action button renders.
+  it("hides both action buttons for a leaf-type task that already has a parent", () => {
     const task = makeTask({ type: "TASK", parent_id: "existing-parent" });
     renderDetails(task);
 
     expect(screen.queryByText("+ Add related card")).not.toBeInTheDocument();
+    expect(screen.queryByText("Create subtask")).not.toBeInTheDocument();
   });
 
-  it("opens the relation picker when the trigger is clicked", () => {
+  it("hides 'Create subtask' and the Child issues section for a leaf type (TASK)", () => {
+    const task = makeTask({ type: "TASK", parent_id: null });
+    renderDetails(task);
+
+    expect(screen.queryByText("Create subtask")).not.toBeInTheDocument();
+    expect(screen.queryByText("Child issues")).not.toBeInTheDocument();
+  });
+
+  it("opens CreateRelatedTaskModal (parent-only) when '+ Add related card' is clicked", () => {
     const story = makeTask({ type: "STORY", parent_id: null });
     renderDetails(story);
 
     fireEvent.click(screen.getByText("+ Add related card"));
 
-    expect(screen.getByText("Child of this card")).toBeInTheDocument();
-    expect(screen.getByText("Parent of this card")).toBeInTheDocument();
+    expect(screen.getByText("New parent card")).toBeInTheDocument();
+  });
+
+  it("renders the description when present, and omits the section when empty", () => {
+    const withDescription = makeTask({ type: "STORY", description: "Some details here" });
+    const { unmount } = renderDetails(withDescription);
+    expect(screen.getByText("Some details here")).toBeInTheDocument();
+    unmount();
+
+    const withoutDescription = makeTask({ type: "STORY", description: "" });
+    renderDetails(withoutDescription);
+    expect(screen.queryByText("Description")).not.toBeInTheDocument();
+  });
+
+  it("shows the parent's ticket_id in the breadcrumb when the task has a parent", () => {
+    const parent = makeTask({ type: "FEATURE" });
+    const story = makeTask({ type: "STORY", parent_id: parent.id });
+    renderDetails(story, [parent, story]);
+
+    expect(screen.getByText(parent.ticket_id)).toBeInTheDocument();
+  });
+
+  it("changes status via the status select and refreshes", async () => {
+    const story = makeTask({ type: "STORY", status: "TODO" });
+    renderDetails(story);
+
+    fireEvent.change(screen.getByDisplayValue("TODO"), { target: { value: "IN_PROGRESS" } });
+
+    await waitFor(() =>
+      expect(mockedApi).toHaveBeenCalledWith(
+        `/projects/project-1/tasks/${story.id}`,
+        "PATCH",
+        { status: "IN_PROGRESS" }
+      )
+    );
   });
 });
 

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { Task } from "@/types/task";
-import { TASK_TYPE_CONFIG, TASK_PARENT_TYPE, getParentCandidates } from "@/lib/taskType";
+import { TASK_TYPE_CONFIG, TASK_PARENT_TYPE, getParentCandidates, getChildTypes, canGainParent } from "@/lib/taskType";
 import { TASK_DETAIL_FIELDS } from "@/lib/taskDetails";
+import CreateRelatedTaskModal from "./CreateRelatedTaskModal";
 
 interface Props {
   task: Task;
@@ -18,6 +19,7 @@ export default function TaskDetailsModal({ task, projectId, tasks, close, refres
   const fields = TASK_DETAIL_FIELDS[task.type];
   const requiredParentType = TASK_PARENT_TYPE[task.type];
   const candidates = requiredParentType ? getParentCandidates(tasks, task.type) : [];
+  const canAddRelatedCard = getChildTypes(task.type).length > 0 || canGainParent(task);
 
   const [values, setValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(fields.map((f) => [f.key, task.details?.[f.key] ?? ""]))
@@ -25,6 +27,17 @@ export default function TaskDetailsModal({ task, projectId, tasks, close, refres
   const [parentId, setParentId] = useState(task.parent_id ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [addRelationOpen, setAddRelationOpen] = useState(false);
+
+  // Resync when the underlying task's parent_id changes from outside this
+  // modal — e.g. CreateRelatedTaskModal (opened from here) links a new
+  // parent and calls refresh(), which updates the `task` prop while this
+  // modal stays mounted. Without this, `parentId` state would stay at its
+  // stale initial value and a subsequent Save would silently overwrite the
+  // link that was just created.
+  useEffect(() => {
+    setParentId(task.parent_id ?? "");
+  }, [task.parent_id]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -54,6 +67,15 @@ export default function TaskDetailsModal({ task, projectId, tasks, close, refres
           </span>
           <h2 className="text-xl font-bold text-white">{task.title}</h2>
         </div>
+
+        {canAddRelatedCard && (
+          <button
+            onClick={() => setAddRelationOpen(true)}
+            className="text-sm text-blue-400 hover:text-blue-300 transition mb-4"
+          >
+            + Add related card
+          </button>
+        )}
 
         {error && (
           <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-3 py-2 mb-3">
@@ -131,6 +153,16 @@ export default function TaskDetailsModal({ task, projectId, tasks, close, refres
         </div>
 
       </div>
+
+      {addRelationOpen && (
+        <CreateRelatedTaskModal
+          sourceTask={task}
+          projectId={projectId}
+          close={() => setAddRelationOpen(false)}
+          refresh={refresh}
+        />
+      )}
+
     </div>
   );
 }

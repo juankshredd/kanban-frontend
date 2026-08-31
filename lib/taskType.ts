@@ -1,6 +1,8 @@
-import { Task, TaskType } from "@/types/task";
+import { Task, TaskStatus, TaskType } from "@/types/task";
 
 export const TASK_TYPES: TaskType[] = ["EPIC", "FEATURE", "STORY", "TASK", "BUG"];
+
+export const TASK_STATUSES: TaskStatus[] = ["TODO", "IN_PROGRESS", "DONE"];
 
 export const TASK_TYPE_CONFIG: Record<
   TaskType,

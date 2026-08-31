@@ -1,7 +1,8 @@
 "use client";
 
 import { Task, TaskType } from "@/types/task";
-import TaskCard from "./TaskCard";
+import TaskCardTree from "./TaskCardTree";
+import { buildTaskTree } from "@/lib/taskHierarchy";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 import { useState } from "react";
@@ -10,13 +11,14 @@ import CreateTaskModal from "./CreateTaskModal";
 interface Props {
   title: "TODO" | "IN_PROGRESS" | "DONE";
   tasks: Task[];
+  allTasks: Task[];
   projectId: string;
   onDelete: (id: string) => void;
   onTypeChange: (id: string, type: TaskType) => void;
   refreshTasks: () => void;
 }
 
-export default function Column({ title, tasks, projectId, onDelete, onTypeChange, refreshTasks }: Props) {
+export default function Column({ title, tasks, allTasks, projectId, onDelete, onTypeChange, refreshTasks }: Props) {
 
   const { setNodeRef } = useDroppable({
     id: title,
@@ -46,12 +48,16 @@ export default function Column({ title, tasks, projectId, onDelete, onTypeChange
         items={tasks.map((t) => t.id)}
         strategy={verticalListSortingStrategy}
       >
-        {tasks.map((task) => (
-          <TaskCard
-            key={task.id}
-            task={task}
+        {buildTaskTree(tasks).map((node) => (
+          <TaskCardTree
+            key={node.task.id}
+            node={node}
+            depth={0}
+            projectId={projectId}
+            tasks={allTasks}
             onDelete={onDelete}
             onTypeChange={onTypeChange}
+            refresh={refreshTasks}
           />
         ))}
       </SortableContext>
@@ -59,6 +65,7 @@ export default function Column({ title, tasks, projectId, onDelete, onTypeChange
       {canCreate && open && (
         <CreateTaskModal
           projectId={projectId}
+          tasks={allTasks}
           close={() => setOpen(false)}
           refresh={refreshTasks}
         />

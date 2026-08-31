@@ -1,6 +1,8 @@
-import { TaskType } from "@/types/task";
+import { Task, TaskStatus, TaskType } from "@/types/task";
 
-export const TASK_TYPES: TaskType[] = ["EPIC", "STORY", "TASK", "BUG"];
+export const TASK_TYPES: TaskType[] = ["EPIC", "FEATURE", "STORY", "TASK", "BUG"];
+
+export const TASK_STATUSES: TaskStatus[] = ["TODO", "IN_PROGRESS", "DONE"];
 
 export const TASK_TYPE_CONFIG: Record<
   TaskType,
@@ -9,6 +11,10 @@ export const TASK_TYPE_CONFIG: Record<
   EPIC: {
     label: "Epic",
     badgeClass: "bg-purple-500/15 text-purple-300 border-purple-500/30",
+  },
+  FEATURE: {
+    label: "Feature",
+    badgeClass: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30",
   },
   STORY: {
     label: "Story",
@@ -23,3 +29,30 @@ export const TASK_TYPE_CONFIG: Record<
     badgeClass: "bg-red-500/15 text-red-300 border-red-500/30",
   },
 };
+
+// Mirrors TASK_PARENT_TYPE in kanban-backend/src/controllers/taskController.js —
+// keep both in sync when a type or its allowed parent changes.
+export const TASK_PARENT_TYPE: Record<TaskType, TaskType | null> = {
+  EPIC: null,
+  FEATURE: "EPIC",
+  STORY: "FEATURE",
+  TASK: "STORY",
+  BUG: "STORY",
+};
+
+export function getParentCandidates(tasks: Task[], childType: TaskType): Task[] {
+  const requiredType = TASK_PARENT_TYPE[childType];
+  if (!requiredType) return [];
+  return tasks.filter((t) => t.type === requiredType);
+}
+
+// Inverse of TASK_PARENT_TYPE: which types are legally a child of parentType.
+export function getChildTypes(parentType: TaskType): TaskType[] {
+  return TASK_TYPES.filter((t) => TASK_PARENT_TYPE[t] === parentType);
+}
+
+// Whether a task is eligible to have a *new* parent link created for it:
+// its type must allow a parent at all, and it can't already have one.
+export function canGainParent(task: Task): boolean {
+  return Boolean(TASK_PARENT_TYPE[task.type]) && !task.parent_id;
+}

@@ -3,13 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { Task, TaskStatus } from "@/types/task";
-import { TASK_TYPE_CONFIG, TASK_PARENT_TYPE, getParentCandidates, getChildTypes, canGainParent } from "@/lib/taskType";
+import { TASK_TYPE_CONFIG, TASK_PARENT_TYPE, TASK_STATUSES, getParentCandidates, getChildTypes, canGainParent } from "@/lib/taskType";
 import { TASK_DETAIL_FIELDS } from "@/lib/taskDetails";
 import { getDirectChildren } from "@/lib/taskHierarchy";
 import CreateRelatedTaskModal from "./CreateRelatedTaskModal";
 import ChildIssuesList from "./ChildIssuesList";
-
-const STATUSES: TaskStatus[] = ["TODO", "IN_PROGRESS", "DONE"];
 
 interface Props {
   task: Task;
@@ -193,7 +191,7 @@ export default function TaskDetailsModal({ task, projectId, tasks, close, refres
               onChange={(e) => handleStatusChange(e.target.value as TaskStatus)}
               className="h-[34px] w-[168px] bg-slate-950 border border-slate-700 text-white text-xs rounded-lg px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              {STATUSES.map((s) => (
+              {TASK_STATUSES.map((s) => (
                 <option key={s} value={s}>
                   {s}
                 </option>

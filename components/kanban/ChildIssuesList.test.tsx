@@ -92,7 +92,7 @@ describe("ChildIssuesList", () => {
     const a = makeTask({ type: "TASK", title: "First" });
     const { refresh } = renderList([a]);
 
-    fireEvent.click(screen.getByLabelText("Remove subtask"));
+    fireEvent.click(screen.getByLabelText(`Remove ${a.ticket_id}`));
 
     await waitFor(() => expect(refresh).toHaveBeenCalled());
     expect(mockedApi).toHaveBeenCalledWith(
@@ -100,6 +100,25 @@ describe("ChildIssuesList", () => {
       "PATCH",
       { parent_id: null }
     );
+  });
+
+  // Negative: a duplicate/rapid Enter before the first POST resolves must
+  // not fire a second, duplicate create request.
+  it("does not submit a duplicate task if Enter is pressed again before the first request resolves", async () => {
+    let resolveFirst: (value: unknown) => void = () => {};
+    mockedApi.mockReset();
+    mockedApi.mockImplementationOnce(
+      () => new Promise((resolve) => { resolveFirst = resolve; })
+    );
+    renderList([]);
+    const input = screen.getByPlaceholderText(/what needs to be done/i);
+
+    fireEvent.change(input, { target: { value: "Dup subtask" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    resolveFirst({});
+    await waitFor(() => expect(mockedApi).toHaveBeenCalledTimes(1));
   });
 
   // Negative: a failed mutation must surface an inline error instead of
@@ -147,5 +166,29 @@ describe("ChildIssuesList", () => {
     fireEvent.dragEnd(rows[0]);
 
     expect(mockedApi).not.toHaveBeenCalled();
+  });
+
+  // Regression test for a code-review finding: after a failed reorder PATCH,
+  // the optimistic local order must roll back to match the server's
+  // (unchanged) order — not silently keep showing the failed drag result
+  // alongside the error banner.
+  it("rolls back the optimistic reorder when the persisting PATCH fails", async () => {
+    mockedApi.mockReset();
+    mockedApi.mockRejectedValueOnce(new Error("network down"));
+    const a = makeTask({ type: "TASK", title: "First" });
+    const b = makeTask({ type: "TASK", title: "Second" });
+    const { container } = renderList([a, b]);
+
+    const rows = container.querySelectorAll("[draggable=true]");
+    fireEvent.dragStart(rows[0]);
+    fireEvent.dragOver(rows[1]);
+    fireEvent.dragEnd(rows[1]);
+
+    await screen.findByText(/no se pudo reordenar/i);
+
+    const titlesInOrder = Array.from(container.querySelectorAll("[draggable=true]")).map(
+      (row) => (row.textContent?.includes("First") ? "First" : "Second")
+    );
+    expect(titlesInOrder).toEqual(["First", "Second"]);
   });
 });

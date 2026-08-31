@@ -3,9 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { Task, TaskStatus } from "@/types/task";
-import { getChildTypes } from "@/lib/taskType";
-
-const STATUSES: TaskStatus[] = ["TODO", "IN_PROGRESS", "DONE"];
+import { getChildTypes, TASK_STATUSES } from "@/lib/taskType";
 
 interface Props {
   parentTask: Task;
@@ -22,6 +20,7 @@ export default function ChildIssuesList({ parentTask, childTasks, projectId, ref
   const dragStartIndexRef = useRef<number | null>(null);
 
   const [draftTitle, setDraftTitle] = useState("");
+  const [submittingAdd, setSubmittingAdd] = useState(false);
   const [error, setError] = useState("");
 
   const childrenKey = childTasks.map((c) => c.id).join(",");
@@ -41,8 +40,9 @@ export default function ChildIssuesList({ parentTask, childTasks, projectId, ref
 
   const handleAddChild = async () => {
     const title = draftTitle.trim();
-    if (!title) return;
+    if (!title || submittingAdd) return;
 
+    setSubmittingAdd(true);
     setError("");
 
     try {
@@ -55,6 +55,8 @@ export default function ChildIssuesList({ parentTask, childTasks, projectId, ref
       refresh();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "No se pudo crear la subtarea");
+    } finally {
+      setSubmittingAdd(false);
     }
   };
 
@@ -119,6 +121,11 @@ export default function ChildIssuesList({ parentTask, childTasks, projectId, ref
       refresh();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "No se pudo reordenar");
+      // Roll back the optimistic local reorder explicitly: if the server's
+      // order didn't actually change, childrenKey (childTasks ids joined in
+      // order) is identical before and after this failed attempt, so the
+      // resync effect below won't re-fire on its own to undo the drag.
+      setOrderIds(childTasks.map((c) => c.id));
       refresh();
     }
   };
@@ -177,7 +184,7 @@ export default function ChildIssuesList({ parentTask, childTasks, projectId, ref
               onChange={(e) => handleStatusChange(child.id, e.target.value as TaskStatus)}
               className="bg-slate-950 border border-slate-700 text-white text-[11px] rounded px-2 py-1"
             >
-              {STATUSES.map((s) => (
+              {TASK_STATUSES.map((s) => (
                 <option key={s} value={s}>
                   {s}
                 </option>
@@ -185,7 +192,7 @@ export default function ChildIssuesList({ parentTask, childTasks, projectId, ref
             </select>
             <button
               onClick={() => handleUnlink(child.id)}
-              aria-label="Remove subtask"
+              aria-label={`Remove ${child.ticket_id}`}
               className="w-6 h-6 grid place-items-center rounded text-slate-400 hover:bg-slate-700 hover:text-white transition"
             >
               ✕
@@ -209,12 +216,14 @@ export default function ChildIssuesList({ parentTask, childTasks, projectId, ref
                 handleAddChild();
               }
             }}
+            disabled={submittingAdd}
             placeholder="What needs to be done? Press Enter to add"
-            className="bg-transparent border-0 text-white placeholder-slate-500 text-sm focus:outline-none"
+            className="bg-transparent border-0 text-white placeholder-slate-500 text-sm focus:outline-none disabled:opacity-50"
           />
           <button
             onClick={handleAddChild}
-            className="px-2.5 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded transition"
+            disabled={submittingAdd}
+            className="px-2.5 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded transition disabled:opacity-50"
           >
             Add
           </button>

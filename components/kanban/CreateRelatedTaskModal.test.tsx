@@ -81,9 +81,6 @@ describe("CreateRelatedTaskModal", () => {
     fireEvent.change(screen.getByPlaceholderText("Title"), { target: { value: "Bigger feature" } });
     fireEvent.click(screen.getByText("Create"));
 
-    // refresh() fires once right after the POST (to surface the new task
-    // even if the link PATCH then fails) and again at the very end, so wait
-    // on close() — called exactly once, only once the whole flow succeeds.
     await waitFor(() => expect(close).toHaveBeenCalled());
 
     expect(mockedApi).toHaveBeenCalledTimes(2);
@@ -99,7 +96,9 @@ describe("CreateRelatedTaskModal", () => {
       "PATCH",
       { parent_id: "new-parent-id" }
     );
-    expect(refresh).toHaveBeenCalled();
+    // Exactly one refresh for the whole successful attempt, not one per
+    // network call — see the regression test below for why that matters.
+    expect(refresh).toHaveBeenCalledTimes(1);
   });
 
   it("retries only the link PATCH (no duplicate POST) after a failed link attempt", async () => {
@@ -114,7 +113,7 @@ describe("CreateRelatedTaskModal", () => {
 
     await screen.findByText(/no se pudo crear/i);
     expect(mockedApi).toHaveBeenCalledTimes(2);
-    expect(refresh).toHaveBeenCalledTimes(1); // the "surface the orphan" refresh
+    expect(refresh).toHaveBeenCalledTimes(1); // surfaces the new, still-unlinked task
     expect(close).not.toHaveBeenCalled();
 
     mockedApi.mockResolvedValueOnce({}); // PATCH retry succeeds
@@ -125,6 +124,38 @@ describe("CreateRelatedTaskModal", () => {
     // Only 3 total api() calls: original POST, failed PATCH, retried PATCH —
     // never a second POST.
     expect(mockedApi).toHaveBeenCalledTimes(3);
+    expect(mockedApi).toHaveBeenNthCalledWith(
+      3,
+      `/projects/project-1/tasks/${story.id}`,
+      "PATCH",
+      { parent_id: "new-parent-id" }
+    );
+  });
+
+  // Regression test for a code-review finding: handleBack used to reset
+  // pendingParentId, so going Back after a partial failure and retrying
+  // re-ran the whole PARENT flow from scratch — creating a second, duplicate
+  // orphan parent task instead of resuming the pending link.
+  it("does not re-POST a duplicate parent task if the user goes Back after a failed link attempt", async () => {
+    mockedApi.mockResolvedValueOnce({ id: "new-parent-id" }); // POST succeeds
+    mockedApi.mockRejectedValueOnce(new Error("network blip")); // PATCH fails
+    const story = makeTask({ type: "STORY", parent_id: null });
+    renderModal(story);
+
+    fireEvent.click(screen.getByText("Parent of this card"));
+    fireEvent.change(screen.getByPlaceholderText("Title"), { target: { value: "Bigger feature" } });
+    fireEvent.click(screen.getByText("Create"));
+    await screen.findByText(/no se pudo crear/i);
+    expect(mockedApi).toHaveBeenCalledTimes(2);
+
+    fireEvent.click(screen.getByText("Back"));
+    fireEvent.click(screen.getByText("Parent of this card"));
+    expect(screen.getByText(/already created on a previous attempt/i)).toBeInTheDocument();
+
+    mockedApi.mockResolvedValueOnce({}); // PATCH retry succeeds
+    fireEvent.click(screen.getByText("Create"));
+
+    await waitFor(() => expect(mockedApi).toHaveBeenCalledTimes(3));
     expect(mockedApi).toHaveBeenNthCalledWith(
       3,
       `/projects/project-1/tasks/${story.id}`,

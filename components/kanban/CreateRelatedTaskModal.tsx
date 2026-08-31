@@ -37,8 +37,12 @@ export default function CreateRelatedTaskModal({ sourceTask, projectId, close, r
     setTitle("");
     setDescription("");
     setChildType(childTypes[0] ?? "");
-    setPendingParentId(null);
     setError("");
+    // pendingParentId is intentionally NOT cleared here: if the PARENT
+    // flow already created a task and only the link PATCH failed, going
+    // Back and re-picking "Parent of this card" must resume that pending
+    // link (see handleCreate) instead of POSTing a second, duplicate
+    // parent task.
   };
 
   const handleCreate = async () => {
@@ -71,9 +75,6 @@ export default function CreateRelatedTaskModal({ sourceTask, projectId, close, r
 
           newParentId = created.id;
           setPendingParentId(newParentId);
-          // Surface the new (still-unlinked) parent task immediately, in
-          // case the link PATCH below fails and the user doesn't retry.
-          refresh();
         }
 
         await api(`/projects/${projectId}/tasks/${sourceTask.id}`, "PATCH", {
@@ -81,11 +82,16 @@ export default function CreateRelatedTaskModal({ sourceTask, projectId, close, r
         });
       }
 
-      refresh();
       close();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "No se pudo crear la tarea relacionada");
     } finally {
+      // Exactly one refresh per attempt, regardless of outcome: covers a
+      // full success (CHILD, or PARENT create+link), and also the partial
+      // PARENT failure where the create succeeded but the link PATCH
+      // didn't — surfacing that still-unlinked task without racing a
+      // second, redundant refresh against this one.
+      refresh();
       setSaving(false);
     }
   };
@@ -138,44 +144,50 @@ export default function CreateRelatedTaskModal({ sourceTask, projectId, close, r
           </div>
         )}
 
-        {relation !== null && (
-          <>
-            <input
-              placeholder="Title"
-              className="bg-slate-950 border border-slate-700 text-white placeholder-slate-500 w-full mb-3 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
+        {relation === "PARENT" && pendingParentId ? (
+          <p className="text-sm text-slate-400 mb-3">
+            A parent card was already created on a previous attempt — click Create to link it to this card.
+          </p>
+        ) : (
+          relation !== null && (
+            <>
+              <input
+                placeholder="Title"
+                className="bg-slate-950 border border-slate-700 text-white placeholder-slate-500 w-full mb-3 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
 
-            <textarea
-              placeholder="Description"
-              className="bg-slate-950 border border-slate-700 text-white placeholder-slate-500 w-full mb-3 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
+              <textarea
+                placeholder="Description"
+                className="bg-slate-950 border border-slate-700 text-white placeholder-slate-500 w-full mb-3 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
 
-            <label className="block text-xs font-semibold text-slate-400 mb-1">
-              Type
-            </label>
+              <label className="block text-xs font-semibold text-slate-400 mb-1">
+                Type
+              </label>
 
-            {relation === "CHILD" ? (
-              <select
-                value={childType}
-                onChange={(e) => setChildType(e.target.value as TaskType)}
-                className="bg-slate-950 border border-slate-700 text-white w-full mb-3 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                {childTypes.map((t) => (
-                  <option key={t} value={t}>
-                    {TASK_TYPE_CONFIG[t].label}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <p className="text-white bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 mb-3">
-                {parentType ? TASK_TYPE_CONFIG[parentType].label : ""}
-              </p>
-            )}
-          </>
+              {relation === "CHILD" ? (
+                <select
+                  value={childType}
+                  onChange={(e) => setChildType(e.target.value as TaskType)}
+                  className="bg-slate-950 border border-slate-700 text-white w-full mb-3 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  {childTypes.map((t) => (
+                    <option key={t} value={t}>
+                      {TASK_TYPE_CONFIG[t].label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <p className="text-white bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 mb-3">
+                  {parentType ? TASK_TYPE_CONFIG[parentType].label : ""}
+                </p>
+              )}
+            </>
+          )
         )}
 
         {error && (

@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+- `specs/CLAUDE.md` — spec-driven development convention: when to write a spec, the template to copy, and its lifecycle from draft through folding into this file. Loaded automatically only when Claude reads files under `specs/`.
+
 ## Project
 
 This is the frontend for a Kanban dashboard app: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, and `@dnd-kit` for drag-and-drop. It is a standalone repo; a separate sibling repo at `../kanban-backend` (Express + a `db.js` data layer, JWT auth) provides the REST API this app talks to.
@@ -16,6 +18,14 @@ npm run lint       # eslint (flat config via eslint.config.mjs)
 npm test           # run the unit test suite once (vitest run)
 npm run test:watch # run the unit test suite in watch mode (vitest)
 ```
+
+## Git workflow
+
+`dev` is branch-protected on GitHub ("Changes must be made through a pull request", 1 required approving review) and `main` presumably more so. **Never push or merge directly into `dev` or `main`** — do all work on a feature branch cut from `dev` (e.g. `feature/<name>`, `docs/<name>`) and open a PR back into `dev` instead, even if a direct push would technically succeed for an admin account. If a push is rejected or bypasses the rule with a warning, treat that as a sign to stop and go through a PR rather than proceeding.
+
+**Cut the feature branch before the first edit, not before the first push.** If `git branch --show-current` reports `dev` or `main` at the start of a task, create/switch to a feature branch before touching any file — including docs-only changes (e.g. editing this file, adding a `specs/` entry). Don't let edits accumulate uncommitted on `dev` on the assumption they'll be moved to a branch later.
+
+**Always review a PR right after opening it**, using the `/code-review` skill against that PR (`/code-review ultra <PR#>` for a deeper multi-agent pass on larger/riskier changes) — don't wait to be asked. This is a manual, on-demand review done by invoking the skill, not an automated GitHub Action/bot; no CI workflow should be added for this unless explicitly requested. Report findings back in chat, or post them as inline PR comments with `--comment` when useful.
 
 ## Testing policy
 

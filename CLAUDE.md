@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-- `specs/CLAUDE.md` — spec-driven development convention: when to write a spec, the template to copy, and its lifecycle from draft through folding into this file. Loaded automatically only when Claude reads files under `specs/`.
+Unlike `kanban-backend`, which splits domain docs across several per-directory `CLAUDE.md` files, this repo has just one: `specs/CLAUDE.md` — the spec-driven development convention (when to write a spec, the template to copy, its lifecycle from draft through folding into this file). It's loaded automatically only when Claude reads files under `specs/`, so its content isn't in context otherwise.
 
 ## Project
 

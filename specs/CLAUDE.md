@@ -1,6 +1,6 @@
 # CLAUDE.md — specs/
 
-Loaded automatically whenever Claude reads files in this directory — see the root `CLAUDE.md` for project-wide context. `specs/` is a **staging area for decisions**, not a permanent record; the permanent record is the root `CLAUDE.md` itself (this repo has no nested per-directory `CLAUDE.md` files the way `kanban-backend` does — one flat file covers Architecture, Notes for changes, etc.).
+Loaded automatically whenever Claude reads files in this directory — see the root `CLAUDE.md` for project-wide context. `specs/` is a **staging area for decisions**, not a permanent record; the permanent record is the root `CLAUDE.md` itself (this file is the only nested per-directory `CLAUDE.md` in this repo — unlike `kanban-backend`, which has several, everything outside `specs/` lives in the one flat root file: Architecture, Notes for changes, etc.).
 
 ## When to write a spec
 

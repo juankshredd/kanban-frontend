@@ -110,7 +110,7 @@ export default function TaskDetailsModal({ task, projectId, tasks, close, refres
           </button>
         </div>
 
-        <div className="grid grid-cols-[minmax(0,1fr)_372px] overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_280px] lg:grid-cols-[minmax(0,1fr)_372px] overflow-y-auto">
 
           <div className="p-6 flex flex-col gap-6 min-w-0">
 
@@ -184,7 +184,7 @@ export default function TaskDetailsModal({ task, projectId, tasks, close, refres
             )}
           </div>
 
-          <div className="p-6 border-l border-slate-800 flex flex-col gap-3.5">
+          <div className="p-6 border-t md:border-t-0 md:border-l border-slate-800 flex flex-col gap-3.5">
 
             <select
               value={task.status}

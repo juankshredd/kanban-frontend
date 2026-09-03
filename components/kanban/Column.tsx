@@ -29,7 +29,7 @@ export default function Column({ title, tasks, allTasks, projectId, onDelete, on
   const canCreate = title === "TODO";
 
   return (
-    <div ref={setNodeRef} className="bg-slate-900 border border-slate-800 rounded-xl p-4 min-h-[500px]">
+    <div ref={setNodeRef} className="bg-slate-900 border border-slate-800 rounded-xl p-4 min-h-[180px] md:min-h-[500px]">
 
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-white font-bold text-sm tracking-wide">{title}</h2>

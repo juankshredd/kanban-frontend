@@ -104,9 +104,9 @@ export default function BoardPage() {
   const done = tasks.filter((t) => t.status === "DONE");
 
   return (
-    <div className="p-10">
+    <div className="p-4 md:p-6 lg:p-10">
 
-      <h1 className="text-2xl font-bold mb-8">Board</h1>
+      <h1 className="text-2xl font-bold mb-4 md:mb-8">Board</h1>
 
       {error && (
         <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-3 py-2 mb-4">
@@ -119,7 +119,7 @@ export default function BoardPage() {
         onDragEnd={handleDragEnd}
       >
 
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
 
           <Column
             title="TODO"

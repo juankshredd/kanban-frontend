@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import ProjectSidebar from "./ProjectSidebar";
 
 const push = vi.fn();
@@ -22,13 +22,34 @@ vi.mock("@/context/ProjectProvider", () => ({
   }),
 }));
 
-function mockMatchMedia(matches: boolean) {
-  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-    matches,
-    media: query,
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-  })) as unknown as typeof window.matchMedia;
+// A fake MediaQueryList whose `matches` can be flipped after mount and that
+// notifies whichever "change" listener the component under test registered
+// — lets tests simulate a real viewport/orientation change, not just the
+// value read once at initial render.
+function mockMatchMedia(initialMatches: boolean) {
+  let matches = initialMatches;
+  let changeListener: (() => void) | null = null;
+
+  const mql = {
+    get matches() {
+      return matches;
+    },
+    addEventListener: vi.fn((_event: string, cb: () => void) => {
+      changeListener = cb;
+    }),
+    removeEventListener: vi.fn(() => {
+      changeListener = null;
+    }),
+  };
+
+  window.matchMedia = vi.fn().mockImplementation(() => mql) as unknown as typeof window.matchMedia;
+
+  return {
+    setMatches(next: boolean) {
+      matches = next;
+      changeListener?.();
+    },
+  };
 }
 
 describe("ProjectSidebar", () => {
@@ -61,5 +82,36 @@ describe("ProjectSidebar", () => {
 
     expect(screen.queryByText("Board")).not.toBeInTheDocument();
     expect(screen.getByTitle("Board")).toBeInTheDocument();
+  });
+
+  it("reacts live to a viewport change after mount, e.g. an iPad mini rotating from portrait to landscape", () => {
+    const mql = mockMatchMedia(false); // starts narrower than desktop (portrait) -> collapsed
+
+    render(<ProjectSidebar projectId="project-1" />);
+
+    expect(screen.getByTitle("Board")).toBeInTheDocument();
+    expect(screen.queryByText("Board")).not.toBeInTheDocument();
+
+    act(() => {
+      mql.setMatches(true); // rotate to landscape, now past the desktop breakpoint
+    });
+
+    expect(screen.getByText("Board")).toBeInTheDocument();
+  });
+
+  it("does not let a live viewport change override a manual collapse/expand choice", () => {
+    const mql = mockMatchMedia(true); // starts at desktop width -> expanded by default
+
+    render(<ProjectSidebar projectId="project-1" />);
+    fireEvent.click(screen.getByTitle("Collapse"));
+    expect(screen.getByTitle("Board")).toBeInTheDocument();
+
+    act(() => {
+      mql.setMatches(false); // shrink below desktop width
+    });
+
+    // Manual collapse should stick regardless of the viewport change.
+    expect(screen.getByTitle("Board")).toBeInTheDocument();
+    expect(screen.queryByText("Board")).not.toBeInTheDocument();
   });
 });

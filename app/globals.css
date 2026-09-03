@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/* Lower the default `md` breakpoint (768px) to 700px so iPad mini portrait
+   (744px CSS width) qualifies for tablet/desktop layouts instead of falling
+   24px short and getting mobile styling despite having room to spare.
+   Nothing in this project used `md:` before this change, so redefining it
+   sitewide is safe. */
+@theme {
+  --breakpoint-md: 43.75rem;
+}
+
 /* RESET GENERAL */
 
 body {
@@ -14,6 +23,15 @@ body {
   max-width: 1400px;
   margin: auto;
   padding: 40px;
+}
+
+/* Below Tailwind's default `lg` (1024px): phones and iPad mini portrait
+   (744px) both need this padding trimmed, since it otherwise stacks with
+   each page's own padding and crushes available content width. */
+@media (max-width: 1023px) {
+  .page-container {
+    padding: 16px;
+  }
 }
 
 /* HEADER */

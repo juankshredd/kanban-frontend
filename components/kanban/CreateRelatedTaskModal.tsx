@@ -68,8 +68,8 @@ export default function CreateRelatedTaskModal({ sourceTask, projectId, close, r
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 w-96">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+      <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 w-full max-w-96">
 
         <h2 className="text-xl font-bold mb-4 text-white">
           New parent card

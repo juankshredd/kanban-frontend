@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useProject } from "@/context/ProjectProvider";
 import { PROJECT_NAV_SECTIONS } from "@/lib/projectNav";
@@ -28,12 +28,24 @@ interface Props {
   projectId: string;
 }
 
+// Matches Tailwind's default `lg` breakpoint (1024px) — below it (phones,
+// and iPad mini in both orientations) the sidebar defaults to its icon-only
+// rail so the board/content area isn't left with a sliver of usable width;
+// the user can still expand it manually via the collapse toggle either way.
+const DESKTOP_QUERY = "(min-width: 1024px)";
+
 export default function ProjectSidebar({ projectId }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const { project, loading } = useProject();
 
   const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    const isDesktop = window.matchMedia(DESKTOP_QUERY).matches;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing initial collapsed state from viewport width, not derivable at render time
+    setCollapsed(!isDesktop);
+  }, []);
 
   return (
     <div

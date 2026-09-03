@@ -132,7 +132,7 @@ export default function ChildIssuesList({ parentTask, childTasks, projectId, ref
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center flex-wrap gap-x-3 gap-y-1">
         <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
           Child issues
         </div>
@@ -162,7 +162,7 @@ export default function ChildIssuesList({ parentTask, childTasks, projectId, ref
             onDragOver={(e) => handleDragOver(e, index)}
             onDragEnd={handleDragFinish}
             onDrop={handleDragFinish}
-            className={`grid grid-cols-[16px_74px_minmax(0,1fr)_132px_28px] items-center gap-2 px-3 py-2 cursor-grab hover:bg-slate-800/60 ${
+            className={`grid grid-cols-[16px_44px_minmax(0,1fr)_92px_24px] md:grid-cols-[16px_74px_minmax(0,1fr)_132px_28px] items-center gap-1 md:gap-2 px-3 py-2 cursor-grab hover:bg-slate-800/60 ${
               index > 0 ? "border-t border-slate-700" : ""
             } ${dragFrom === index ? "opacity-45" : ""} ${
               dragOver === index && dragFrom !== index ? "bg-blue-500/10" : ""

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useProject } from "@/context/ProjectProvider";
 import { PROJECT_NAV_SECTIONS } from "@/lib/projectNav";
@@ -28,12 +28,36 @@ interface Props {
   projectId: string;
 }
 
+// Matches Tailwind's default `lg` breakpoint (1024px) — below it (phones,
+// and iPad mini in both orientations) the sidebar defaults to its icon-only
+// rail so the board/content area isn't left with a sliver of usable width;
+// the user can still expand it manually via the collapse toggle either way.
+const DESKTOP_QUERY = "(min-width: 1024px)";
+
+function subscribeToDesktopQuery(callback: () => void) {
+  const mql = window.matchMedia(DESKTOP_QUERY);
+  mql.addEventListener("change", callback);
+  return () => mql.removeEventListener("change", callback);
+}
+
+function getIsDesktop() {
+  return window.matchMedia(DESKTOP_QUERY).matches;
+}
+
+// SSR/first-paint snapshot assumes non-desktop, so phones and iPad mini (in
+// either orientation) — every device this PR targets — render collapsed with
+// no flash. A real desktop viewport briefly renders collapsed then expands
+// once this store's live snapshot kicks in; that one-time flash only affects
+// desktop, and favors a correct, flash-free result on the narrow devices
+// this behavior exists for in the first place.
 export default function ProjectSidebar({ projectId }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const { project, loading } = useProject();
 
-  const [collapsed, setCollapsed] = useState(false);
+  const isDesktop = useSyncExternalStore(subscribeToDesktopQuery, getIsDesktop, () => false);
+  const [manualCollapsed, setManualCollapsed] = useState<boolean | null>(null);
+  const collapsed = manualCollapsed ?? !isDesktop;
 
   return (
     <div
@@ -112,7 +136,7 @@ export default function ProjectSidebar({ projectId }: Props) {
 
       <div className={`border-t border-slate-800 p-2 ${collapsed ? "flex justify-center" : "flex justify-end"}`}>
         <button
-          onClick={() => setCollapsed((v) => !v)}
+          onClick={() => setManualCollapsed(!collapsed)}
           title={collapsed ? "Expand" : "Collapse"}
           className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition"
         >
